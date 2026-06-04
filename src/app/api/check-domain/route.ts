@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("suggestions")
-    .select("id, domain_name, meaning")
+    .select("id, domain_name, meaning, initial_votes")
     .eq("domain_name", trimmed)
     .limit(1);
 
@@ -21,8 +21,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const exists = data && data.length > 0;
   return NextResponse.json({
-    exists: data && data.length > 0,
-    suggestion: data && data.length > 0 ? data[0] : null,
+    exists,
+    initial_votes: exists ? data[0].initial_votes || 1 : 0,
   });
 }

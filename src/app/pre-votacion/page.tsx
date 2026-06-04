@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Clock, Users, FileText, Vote, Eye, LogOut, Loader2, ListChecks, ArrowLeft } from "lucide-react";
+import { Clock, Users, FileText, Vote, Eye, LogOut, Loader2, ListChecks, ArrowLeft, UsersRound } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
 import { DomainBadge } from "@/components/ui/domain-badge";
 import { getSession, clearSession } from "@/lib/session";
@@ -201,6 +201,12 @@ export default function PreVotacionPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <DomainBadge name={s.domain_name} size="sm" />
+                      {(s.initial_votes ?? 1) > 1 && (
+                        <div className="flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-400/20 w-fit">
+                          <UsersRound className="w-3 h-3 text-emerald-400" />
+                          <span className="text-xs text-emerald-300">{s.initial_votes} personas</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </GlowCard>

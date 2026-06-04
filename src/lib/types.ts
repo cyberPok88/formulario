@@ -9,6 +9,7 @@ export interface Suggestion {
   user_id: string;
   domain_name: string;
   meaning: string;
+  initial_votes: number;
   created_at: string;
 }
 

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET() {
   const { data: suggestions, error } = await supabase
     .from("suggestions")
-    .select("id, user_id, domain_name, meaning, created_at")
+    .select("id, user_id, domain_name, meaning, initial_votes, created_at")
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -49,20 +49,31 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const rows = suggestions.map((s) => ({
-    user_id,
-    domain_name: s.domain_name.trim().toLowerCase(),
-    meaning: s.meaning.trim(),
-  }));
+  const results: { inserted: string[]; merged: string[] } = { inserted: [], merged: [] };
 
-  const { data, error } = await supabase
-    .from("suggestions")
-    .insert(rows)
-    .select();
+  for (const s of suggestions) {
+    const domainName = s.domain_name.trim().toLowerCase();
+    const meaning = s.meaning.trim();
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const { data: existing } = await supabase
+      .from("suggestions")
+      .select("id, initial_votes")
+      .eq("domain_name", domainName)
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      await supabase
+        .from("suggestions")
+        .update({ initial_votes: (existing[0].initial_votes || 1) + 1 })
+        .eq("id", existing[0].id);
+      results.merged.push(domainName);
+    } else {
+      const { error } = await supabase
+        .from("suggestions")
+        .insert({ user_id, domain_name: domainName, meaning, initial_votes: 1 });
+      if (!error) results.inserted.push(domainName);
+    }
   }
 
-  return NextResponse.json(data, { status: 201 });
+  return NextResponse.json({ inserted: results.inserted.length, merged: results.merged.length }, { status: 201 });
 }

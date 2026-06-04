@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, Users, MessageSquare, Trophy, Loader2 } from "lucide-react";
+import { BarChart3, Users, MessageSquare, Trophy, Loader2, UsersRound } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
 import { DomainBadge } from "@/components/ui/domain-badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -15,6 +15,7 @@ interface Result {
   meaning: string;
   total_points: number;
   vote_count: number;
+  initial_votes: number;
   tag_counts: Record<string, number>;
 }
 
@@ -94,6 +95,12 @@ export default function ResultadosPage() {
                     </span>
                     <div className="flex-1 min-w-0">
                       <DomainBadge name={result.domain_name} size="sm" />
+                      {result.initial_votes > 1 && (
+                        <div className="flex items-center gap-1.5 mt-1.5 px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-400/20 w-fit">
+                          <UsersRound className="w-3 h-3 text-emerald-400" />
+                          <span className="text-xs text-emerald-300">{result.initial_votes} personas</span>
+                        </div>
+                      )}
                       <p className="text-sm text-slate-400 mt-1.5">{result.meaning}</p>
                       {Object.keys(result.tag_counts).length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-2">

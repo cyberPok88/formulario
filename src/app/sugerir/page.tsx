@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Pencil, Plus, Trash2, Send, ArrowLeft, ArrowRight, Loader2, Globe, Mail, ExternalLink, AtSign, Hash, AlertTriangle, Search, Vote, Clock, Users, BarChart3, Eye } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, Send, ArrowLeft, ArrowRight, Loader2, Globe, Mail, ExternalLink, AtSign, Hash, Users, Vote, Clock, BarChart3, Eye } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
 import { DomainBadge } from "@/components/ui/domain-badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -30,8 +30,8 @@ interface SuggestionField {
 }
 
 interface DuplicateCheck {
-  isDuplicate: boolean;
-  suggestedBy?: string;
+  exists: boolean;
+  initialVotes: number;
   checking: boolean;
 }
 
@@ -87,11 +87,11 @@ export default function SugerirPage() {
 
   const checkDuplicate = useCallback(async (index: number, domainName: string, extension: string) => {
     if (!domainName.trim()) {
-      setDuplicateChecks(prev => ({ ...prev, [index]: { isDuplicate: false, checking: false } }));
+      setDuplicateChecks(prev => ({ ...prev, [index]: { exists: false, initialVotes: 0, checking: false } }));
       return;
     }
 
-    setDuplicateChecks(prev => ({ ...prev, [index]: { isDuplicate: false, checking: true } }));
+    setDuplicateChecks(prev => ({ ...prev, [index]: { exists: false, initialVotes: 0, checking: true } }));
 
     try {
       const fullDomain = `${domainName.trim().toLowerCase()}${extension}`;
@@ -101,13 +101,13 @@ export default function SugerirPage() {
       setDuplicateChecks(prev => ({
         ...prev,
         [index]: {
-          isDuplicate: data.exists,
-          suggestedBy: data.suggestion?.user_id,
+          exists: data.exists,
+          initialVotes: data.initial_votes || 0,
           checking: false,
         },
       }));
     } catch {
-      setDuplicateChecks(prev => ({ ...prev, [index]: { isDuplicate: false, checking: false } }));
+      setDuplicateChecks(prev => ({ ...prev, [index]: { exists: false, initialVotes: 0, checking: false } }));
     }
   }, []);
 
@@ -148,12 +148,6 @@ export default function SugerirPage() {
     const incomplete = suggestions.findIndex(s => !s.domain_name.trim() || !s.meaning.trim());
     if (incomplete !== -1) {
       setError(`La sugerencia ${incomplete + 1} está incompleta`);
-      return;
-    }
-
-    const duplicates = suggestions.filter((s, i) => duplicateChecks[i]?.isDuplicate);
-    if (duplicates.length > 0) {
-      setError(`Tienes ${duplicates.length} dominio(s) duplicado(s). Cambia o elimínalos.`);
       return;
     }
 
@@ -500,18 +494,16 @@ export default function SugerirPage() {
           {suggestions.map((s, i) => {
             const isComplete = s.domain_name.trim() && s.meaning.trim();
             const check = duplicateChecks[i];
-            const hasDuplicate = check?.isDuplicate;
             const isChecking = check?.checking;
-            const fullDomain = `${s.domain_name.trim().toLowerCase()}${s.extension}`;
 
             return (
               <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <GlowCard hover={false} className={`relative ${hasDuplicate ? "border-red-500/30 bg-red-500/5" : ""}`}>
+                <GlowCard hover={false} className="relative">
                   <div className="flex items-center gap-3 mb-3">
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                      isComplete && !hasDuplicate ? "bg-emerald-500/20 text-emerald-400 border border-emerald-400/30" : "bg-white/5 text-slate-500 border border-white/10"
+                      isComplete ? "bg-emerald-500/20 text-emerald-400 border border-emerald-400/30" : "bg-white/5 text-slate-500 border border-white/10"
                     }`}>
-                      {isComplete && !hasDuplicate ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                      {isComplete ? <Check className="w-3.5 h-3.5" /> : i + 1}
                     </div>
                     <span className="text-sm text-slate-400">Sugerencia {i + 1}{i >= 5 ? " (extra)" : ""}</span>
                     {i >= 5 && (
@@ -525,15 +517,10 @@ export default function SugerirPage() {
                       <div className="relative flex-1">
                         <input type="text" value={s.domain_name} onChange={e => updateSuggestion(i, "domain_name", e.target.value)}
                           placeholder="nombre-del-dominio"
-                          className={`w-full px-4 py-2.5 pr-10 bg-white/5 border rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-1 text-sm font-mono ${
-                            hasDuplicate ? "border-red-500/50 focus:ring-red-500/50" : "border-white/10 focus:ring-blue-500/50"
-                          }`}
+                          className="w-full px-4 py-2.5 pr-10 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/50 text-sm font-mono"
                         />
                         {isChecking && (
-                          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 animate-pulse" />
-                        )}
-                        {hasDuplicate && !isChecking && (
-                          <AlertTriangle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-red-400" />
+                          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 animate-spin" />
                         )}
                       </div>
                       <select
@@ -546,13 +533,6 @@ export default function SugerirPage() {
                         ))}
                       </select>
                     </div>
-
-                    {hasDuplicate && (
-                      <p className="text-red-400 text-xs flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3" />
-                        Este dominio ya fue propuesto por otro usuario
-                      </p>
-                    )}
 
                     <textarea value={s.meaning} onChange={e => updateSuggestion(i, "meaning", e.target.value)}
                       placeholder="¿Qué significa o por qué lo elegiste?"

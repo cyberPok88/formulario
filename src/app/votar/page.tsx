@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
-import { Minus, Plus, Trophy, Loader2, ChevronRight, Hash, Lock } from "lucide-react";
+import { Minus, Plus, Trophy, Loader2, ChevronRight, Hash, Lock, UsersRound } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
 import { DomainBadge } from "@/components/ui/domain-badge";
 import type { User, Suggestion, VoteTag } from "@/lib/types";
@@ -56,7 +56,7 @@ export default function VotarPage() {
       setUser(u);
 
       const { data: suggestions } = await supabase
-        .from("suggestions").select("id, user_id, domain_name, meaning, created_at");
+        .from("suggestions").select("id, user_id, domain_name, meaning, initial_votes, created_at");
       if (!suggestions || suggestions.length === 0) { setError("No hay sugerencias todavía"); setLoading(false); return; }
 
       const { data: existingVotes } = await supabase
@@ -217,6 +217,12 @@ export default function VotarPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <DomainBadge name={option.domain_name} size="md" />
+                      {option.initial_votes > 1 && (
+                        <div className="flex items-center gap-1.5 mt-2 px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-400/20 w-fit">
+                          <UsersRound className="w-3 h-3 text-emerald-400" />
+                          <span className="text-xs text-emerald-300 font-medium">{option.initial_votes} personas pensaron en esto</span>
+                        </div>
+                      )}
                       <p className="text-sm text-slate-400 mt-2">{option.meaning}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">

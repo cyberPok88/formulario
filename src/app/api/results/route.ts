@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   const { data: suggestions, error: sugError } = await supabase
     .from("suggestions")
-    .select("id, domain_name, meaning, user_id");
+    .select("id, domain_name, meaning, user_id, initial_votes");
 
   if (sugError) {
     return NextResponse.json({ error: sugError.message }, { status: 500 });
@@ -22,6 +22,7 @@ export async function GET() {
     const suggestionVotes = votes.filter((v) => v.suggestion_id === s.id);
     const totalPoints = suggestionVotes.reduce((sum, v) => sum + v.points, 0);
     const voteCount = suggestionVotes.length;
+    const initialVotes = s.initial_votes || 1;
 
     const tagCounts: Record<string, number> = {};
     for (const v of suggestionVotes) {
@@ -35,8 +36,9 @@ export async function GET() {
       id: s.id,
       domain_name: s.domain_name,
       meaning: s.meaning,
-      total_points: totalPoints,
+      total_points: totalPoints + initialVotes,
       vote_count: voteCount,
+      initial_votes: initialVotes,
       tag_counts: tagCounts,
     };
   });
