@@ -35,7 +35,7 @@ const REQUISITOS = [
 ];
 
 const PASOS = [
-  { num: "1", titulo: "Identifícate", desc: "Ingresa tu nombre y crea tu PIN", color: "from-blue-500 to-blue-600" },
+  { num: "1", titulo: "Identifícate", desc: "Ingresa alias y crea tu PIN de 4 dígitos", color: "from-blue-500 to-blue-600" },
   { num: "2", titulo: "Sugiere 5+ dominios", desc: "Con su significado o interpretación", color: "from-emerald-500 to-emerald-600" },
   { num: "3", titulo: "Vota por rondas", desc: "Reparte puntos entre tus favoritos", color: "from-indigo-500 to-indigo-600" },
   { num: "4", titulo: "Resultado final", desc: "El dominio con más votos gana", color: "from-amber-500 to-amber-600" },
@@ -240,8 +240,8 @@ export default function Home() {
           >
             {phaseInfo.phase === "suggestions" && (
               <div className={`rounded-xl border p-4 flex items-center gap-3 ${phaseInfo.participants >= 5
-                  ? "bg-emerald-500/5 border-emerald-400/20"
-                  : "bg-blue-500/5 border-blue-400/20"
+                ? "bg-emerald-500/5 border-emerald-400/20"
+                : "bg-blue-500/5 border-blue-400/20"
                 }`}>
                 <Users className={`w-5 h-5 shrink-0 ${phaseInfo.participants >= 5 ? "text-emerald-400" : "text-blue-400"}`} />
                 <div className="flex-1">
