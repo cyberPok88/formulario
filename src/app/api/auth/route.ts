@@ -28,12 +28,15 @@ export async function POST(request: NextRequest) {
   if (mode === "register") {
     const { data: existing } = await supabase
       .from("users")
-      .select("id, pin_hash")
+      .select("id, username, pin_hash")
       .eq("username", trimmed)
       .maybeSingle();
 
     if (existing && existing.pin_hash) {
-      return NextResponse.json({ error: "Este usuario ya tiene PIN registrado" }, { status: 409 });
+      if (existing.pin_hash !== pinHash) {
+        return NextResponse.json({ error: "PIN incorrecto" }, { status: 401 });
+      }
+      return NextResponse.json({ success: true, user: { id: existing.id, username: existing.username } });
     }
 
     if (existing) {

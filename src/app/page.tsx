@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
-import { Globe, Sparkles, Type, ArrowRight, Loader2, Users, Vote, Shield, Lightbulb, Hash } from "lucide-react";
+import { Globe, Sparkles, Type, ArrowRight, Loader2, Users, Vote, Shield, Hash, Play } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
 
 const REQUISITOS = [
   {
     icon: Globe,
-    title: "Extensión .mx",
-    desc: "Ya pactada. Ventajas de presencia en México — confianza, identidad, disponibilidad.",
+    title: "Extension .mx",
+    desc: "Se derermino el uso de .mx como base, pero puedes cambiar la extención como prefieras. Tú decides cuál representa mejor al proyecto.",
     color: "text-blue-400",
     bgColor: "bg-blue-500/10",
     borderColor: "border-blue-400/20",
@@ -35,16 +35,15 @@ const REQUISITOS = [
 ];
 
 const PASOS = [
-  { num: "01", titulo: "Identifícate", desc: "Ingresa tu nombre de usuario y PIN" },
-  { num: "02", titulo: "Sugiere 5+ dominios", desc: "Con su significado o interpretación" },
-  { num: "03", titulo: "Vota por rondas", desc: "Reparte puntos entre tus favoritos" },
-  { num: "04", titulo: "Resultado final", desc: "El dominio con más votos gana" },
+  { num: "1", titulo: "Identifícate", desc: "Ingresa tu nombre y crea tu PIN", color: "from-blue-500 to-blue-600" },
+  { num: "2", titulo: "Sugiere 5+ dominios", desc: "Con su significado o interpretación", color: "from-emerald-500 to-emerald-600" },
+  { num: "3", titulo: "Vota por rondas", desc: "Reparte puntos entre tus favoritos", color: "from-indigo-500 to-indigo-600" },
+  { num: "4", titulo: "Resultado final", desc: "El dominio con más votos gana", color: "from-amber-500 to-amber-600" },
 ];
 
 export default function Home() {
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState("");
-  const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [phaseInfo, setPhaseInfo] = useState<{ phase: string; participants: number; suggestions: number } | null>(null);
@@ -88,17 +87,16 @@ export default function Home() {
     }
 
     try {
-      const mode = isRegistering ? "register" : "login";
       const authRes = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: trimmed, pin, mode }),
+        body: JSON.stringify({ username: trimmed, pin, mode: "register" }),
       });
 
       const authData = await authRes.json();
 
       if (!authRes.ok) {
-        setError(authData.error || "Error de autenticación");
+        setError(authData.error || "Error al registrar");
         setLoading(false);
         return;
       }
@@ -149,7 +147,6 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
             <Globe className="w-4 h-4 text-blue-400" />
             <span className="text-sm font-medium text-slate-300">Proyecto Tenochtitlan</span>
-            <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold">.mx</span>
           </div>
         </motion.div>
 
@@ -174,12 +171,42 @@ export default function Home() {
           </p>
         </motion.div>
 
-        {/* Requisitos - Sección mejorada */}
+        {/* Cómo funciona - Sección prominente */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="mb-12"
+        >
+          <h2 className="text-center text-sm font-semibold text-slate-300 uppercase tracking-wider mb-6">
+            Cómo funciona
+          </h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {PASOS.map((paso, i) => (
+              <motion.div
+                key={paso.num}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + i * 0.1 }}
+              >
+                <GlowCard className="h-full text-center">
+                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${paso.color} flex items-center justify-center mx-auto mb-3 shadow-lg`}>
+                    <span className="text-xl font-bold text-white">{paso.num}</span>
+                  </div>
+                  <h3 className="text-white font-semibold text-base mb-1">{paso.titulo}</h3>
+                  <p className="text-sm text-slate-400">{paso.desc}</p>
+                </GlowCard>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Requisitos */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mb-10"
         >
           <h2 className="text-center text-sm font-semibold text-slate-300 uppercase tracking-wider mb-6 flex items-center justify-center gap-2">
             <Shield className="w-4 h-4 text-blue-400" />
@@ -191,11 +218,11 @@ export default function Home() {
                 key={req.title}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.1 }}
+                transition={{ delay: 0.6 + i * 0.1 }}
               >
                 <GlowCard className={`h-full ${req.bgColor} border ${req.borderColor}`}>
-                  <req.icon className={`w-8 h-8 ${req.color} mb-3`} />
-                  <h3 className="text-white font-semibold text-lg mb-1">{req.title}</h3>
+                  <req.icon className={`w-7 h-7 ${req.color} mb-3`} />
+                  <h3 className="text-white font-semibold text-base mb-1">{req.title}</h3>
                   <p className="text-sm text-slate-300">{req.desc}</p>
                 </GlowCard>
               </motion.div>
@@ -208,15 +235,14 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.7 }}
             className="max-w-md mx-auto mb-8"
           >
             {phaseInfo.phase === "suggestions" && (
-              <div className={`rounded-xl border p-4 flex items-center gap-3 ${
-                phaseInfo.participants >= 5
+              <div className={`rounded-xl border p-4 flex items-center gap-3 ${phaseInfo.participants >= 5
                   ? "bg-emerald-500/5 border-emerald-400/20"
                   : "bg-blue-500/5 border-blue-400/20"
-              }`}>
+                }`}>
                 <Users className={`w-5 h-5 shrink-0 ${phaseInfo.participants >= 5 ? "text-emerald-400" : "text-blue-400"}`} />
                 <div className="flex-1">
                   <p className={`text-sm font-medium ${phaseInfo.participants >= 5 ? "text-emerald-300" : "text-blue-300"}`}>
@@ -244,22 +270,17 @@ export default function Home() {
           </motion.div>
         )}
 
-        {/* Login form - Mejorado con PIN */}
+        {/* Registro form */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.8 }}
           className="max-w-md mx-auto"
         >
           <GlowCard hover={false} className="p-8">
-            <h2 className="text-xl font-semibold text-white mb-1">
-              {isRegistering ? "Crea tu cuenta" : "¿Cómo te llamas?"}
-            </h2>
+            <h2 className="text-xl font-semibold text-white mb-1">Regístrate</h2>
             <p className="text-sm text-slate-400 mb-6">
-              {isRegistering
-                ? "Elige un PIN de 4 a 6 dígitos para proteger tu voto."
-                : "Ingresa tu usuario y PIN para continuar."
-              }
+              Elige un nombre de usuario y crea tu PIN para comenzar.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -280,7 +301,7 @@ export default function Home() {
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   <span className="flex items-center gap-2">
                     <Hash className="w-4 h-4 text-blue-400" />
-                    PIN {isRegistering ? "(nuevo)" : ""}
+                    PIN (nuevo)
                   </span>
                 </label>
                 <input
@@ -297,28 +318,15 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-slate-700 disabled:to-slate-700 text-white font-semibold rounded-xl transition-all duration-200"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-slate-700 disabled:to-slate-700 text-white font-semibold rounded-xl transition-all duration-200 text-lg"
               >
                 {loading ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Entrando...</>
+                  <><Loader2 className="w-5 h-5 animate-spin" /> Entrando...</>
                 ) : (
-                  <>Entrar <ArrowRight className="w-4 h-4" /></>
+                  <><Play className="w-5 h-5" /> COMENZAR</>
                 )}
               </button>
             </form>
-
-            <div className="mt-4 text-center">
-              <button
-                type="button"
-                onClick={() => { setIsRegistering(!isRegistering); setError(""); }}
-                className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                {isRegistering
-                  ? "¿Ya tienes cuenta? Inicia sesión"
-                  : "¿No tienes PIN? Regístrate"
-                }
-              </button>
-            </div>
 
             {error && (
               <motion.p
@@ -330,36 +338,6 @@ export default function Home() {
               </motion.p>
             )}
           </GlowCard>
-        </motion.div>
-
-        {/* Cómo funciona - Sección mejorada */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="mt-16"
-        >
-          <h3 className="center text-sm font-semibold text-slate-300 uppercase tracking-wider mb-6 flex items-center justify-center gap-2">
-            <Lightbulb className="w-4 h-4 text-amber-400" />
-            Cómo funciona
-          </h3>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {PASOS.map((paso, i) => (
-              <motion.div
-                key={paso.num}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 + i * 0.1 }}
-                className="rounded-xl border border-white/10 bg-white/[0.03] p-5 text-center"
-              >
-                <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-blue-400 to-blue-600">
-                  {paso.num}
-                </span>
-                <p className="text-white font-semibold text-base mt-2">{paso.titulo}</p>
-                <p className="text-slate-400 text-sm mt-1">{paso.desc}</p>
-              </motion.div>
-            ))}
-          </div>
         </motion.div>
       </div>
     </div>

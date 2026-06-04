@@ -1,17 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Pencil, Plus, Trash2, Send, ArrowLeft, ArrowRight, Loader2, Globe, Mail, ExternalLink, AtSign, Hash } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, Send, ArrowLeft, ArrowRight, Loader2, Globe, Mail, ExternalLink, AtSign, Hash, AlertTriangle, Search } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
 import { DomainBadge } from "@/components/ui/domain-badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import type { User } from "@/lib/types";
 
+const EXTENSIONS = [
+  { value: ".mx", label: ".mx" },
+  { value: ".com.mx", label: ".com.mx" },
+  { value: ".org.mx", label: ".org.mx" },
+  { value: ".net.mx", label: ".net.mx" },
+  { value: ".lat", label: ".lat" },
+  { value: ".com", label: ".com" },
+  { value: ".org", label: ".org" },
+  { value: ".dev", label: ".dev" },
+  { value: ".io", label: ".io" },
+];
+
 interface SuggestionField {
   domain_name: string;
+  extension: string;
   meaning: string;
+}
+
+interface DuplicateCheck {
+  isDuplicate: boolean;
+  suggestedBy?: string;
+  checking: boolean;
 }
 
 type Phase = "capture" | "review" | "done";
@@ -19,13 +38,14 @@ type Phase = "capture" | "review" | "done";
 export default function SugerirPage() {
   const [user, setUser] = useState<User | null>(null);
   const [suggestions, setSuggestions] = useState<SuggestionField[]>(
-    Array(5).fill(null).map(() => ({ domain_name: "", meaning: "" }))
+    Array(5).fill(null).map(() => ({ domain_name: "", extension: ".mx", meaning: "" }))
   );
   const [phase, setPhase] = useState<Phase>("capture");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [stats, setStats] = useState<{ total_suggestions: number; total_participants: number } | null>(null);
+  const [duplicateChecks, setDuplicateChecks] = useState<Record<number, DuplicateCheck>>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -37,6 +57,43 @@ export default function SugerirPage() {
   const completedCount = suggestions.filter(s => s.domain_name.trim() && s.meaning.trim()).length;
   const allComplete = completedCount >= 5;
 
+  const checkDuplicate = useCallback(async (index: number, domainName: string, extension: string) => {
+    if (!domainName.trim()) {
+      setDuplicateChecks(prev => ({ ...prev, [index]: { isDuplicate: false, checking: false } }));
+      return;
+    }
+
+    setDuplicateChecks(prev => ({ ...prev, [index]: { isDuplicate: false, checking: true } }));
+
+    try {
+      const fullDomain = `${domainName.trim().toLowerCase()}${extension}`;
+      const res = await fetch(`/api/check-domain?domain=${encodeURIComponent(fullDomain)}`);
+      const data = await res.json();
+
+      setDuplicateChecks(prev => ({
+        ...prev,
+        [index]: {
+          isDuplicate: data.exists,
+          suggestedBy: data.suggestion?.user_id,
+          checking: false,
+        },
+      }));
+    } catch {
+      setDuplicateChecks(prev => ({ ...prev, [index]: { isDuplicate: false, checking: false } }));
+    }
+  }, []);
+
+  useEffect(() => {
+    const timers: NodeJS.Timeout[] = [];
+    suggestions.forEach((s, i) => {
+      if (s.domain_name.trim()) {
+        const timer = setTimeout(() => checkDuplicate(i, s.domain_name, s.extension), 500);
+        timers.push(timer);
+      }
+    });
+    return () => timers.forEach(t => clearTimeout(t));
+  }, [suggestions, checkDuplicate]);
+
   function updateSuggestion(index: number, field: keyof SuggestionField, value: string) {
     setSuggestions(prev => {
       const updated = [...prev];
@@ -46,12 +103,17 @@ export default function SugerirPage() {
   }
 
   function addSuggestion() {
-    setSuggestions(prev => [...prev, { domain_name: "", meaning: "" }]);
+    setSuggestions(prev => [...prev, { domain_name: "", extension: ".mx", meaning: "" }]);
   }
 
   function removeSuggestion(index: number) {
     if (suggestions.length <= 5) return;
     setSuggestions(prev => prev.filter((_, i) => i !== index));
+    setDuplicateChecks(prev => {
+      const newChecks = { ...prev };
+      delete newChecks[index];
+      return newChecks;
+    });
   }
 
   function handleReview() {
@@ -60,6 +122,13 @@ export default function SugerirPage() {
       setError(`La sugerencia ${incomplete + 1} está incompleta`);
       return;
     }
+
+    const duplicates = suggestions.filter((s, i) => duplicateChecks[i]?.isDuplicate);
+    if (duplicates.length > 0) {
+      setError(`Tienes ${duplicates.length} dominio(s) duplicado(s). Cambia o elimínalos.`);
+      return;
+    }
+
     setError("");
     setPhase("review");
   }
@@ -75,7 +144,7 @@ export default function SugerirPage() {
         body: JSON.stringify({
           user_id: user!.id,
           suggestions: suggestions.map(s => ({
-            domain_name: s.domain_name.trim(),
+            domain_name: `${s.domain_name.trim().toLowerCase()}${s.extension}`,
             meaning: s.meaning.trim(),
           })),
         }),
@@ -159,16 +228,27 @@ export default function SugerirPage() {
 
           <div className="space-y-4">
             {suggestions.map((s, i) => {
-              const clean = s.domain_name.trim().replace(/\.mx$/i, "").toLowerCase();
+              const fullDomain = `${s.domain_name.trim().toLowerCase()}${s.extension}`;
               return (
               <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
                 <GlowCard className="relative">
                   {editingIndex === i ? (
                     <div className="space-y-3">
-                      <input type="text" value={s.domain_name}
-                        onChange={e => updateSuggestion(i, "domain_name", e.target.value)}
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50"
-                      />
+                      <div className="flex gap-2">
+                        <input type="text" value={s.domain_name}
+                          onChange={e => updateSuggestion(i, "domain_name", e.target.value)}
+                          className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50 font-mono"
+                        />
+                        <select
+                          value={s.extension}
+                          onChange={e => updateSuggestion(i, "extension", e.target.value)}
+                          className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                        >
+                          {EXTENSIONS.map(ext => (
+                            <option key={ext.value} value={ext.value} className="bg-slate-800">{ext.label}</option>
+                          ))}
+                        </select>
+                      </div>
                       <textarea value={s.meaning}
                         onChange={e => updateSuggestion(i, "meaning", e.target.value)} rows={2}
                         className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50 resize-none"
@@ -180,7 +260,6 @@ export default function SugerirPage() {
                   ) : (
                     <>
                       <div className="flex items-start gap-4">
-                        {/* Número de enumeración grande */}
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-400/30 flex items-center justify-center shrink-0">
                           <span className="text-lg font-bold text-blue-300">{i + 1}</span>
                         </div>
@@ -188,8 +267,11 @@ export default function SugerirPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
-                              <DomainBadge name={s.domain_name} size="md" />
-                              <div className="mt-3 pl-1 border-l-2 border-indigo-500/30 ml-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-white font-semibold text-lg">{s.domain_name}</span>
+                                <span className="text-blue-400 font-mono text-sm">{s.extension}</span>
+                              </div>
+                              <div className="mt-2 pl-1 border-l-2 border-indigo-500/30 ml-1">
                                 <p className="text-sm text-slate-300 pl-3 italic">&ldquo;{s.meaning}&rdquo;</p>
                               </div>
                             </div>
@@ -205,25 +287,25 @@ export default function SugerirPage() {
                             </div>
                           </div>
 
-                          {clean && (
-                            <div className="mt-4 pt-3 border-t border-white/5">
+                          {fullDomain && (
+                            <div className="mt-3 pt-3 border-t border-white/5">
                               <p className="text-[10px] uppercase tracking-widest text-slate-600 mb-2">Así se vería</p>
                               <div className="flex flex-wrap gap-2">
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
                                   <ExternalLink className="w-3 h-3 text-blue-500/60" />
-                                  {clean}.mx
+                                  {fullDomain}
                                 </span>
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
                                   <Mail className="w-3 h-3 text-emerald-500/60" />
-                                  contacto@{clean}.mx
+                                  contacto@{fullDomain}
                                 </span>
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
                                   <ExternalLink className="w-3 h-3 text-indigo-500/60" />
-                                  {clean}.mx/proyectos
+                                  {fullDomain}/proyectos
                                 </span>
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
                                   <AtSign className="w-3 h-3 text-amber-500/60" />
-                                  @{clean}.mx
+                                  @{fullDomain}
                                 </span>
                               </div>
                             </div>
@@ -265,7 +347,7 @@ export default function SugerirPage() {
           <h1 className="text-2xl font-bold text-white">Sugiere dominios</h1>
         </div>
         <p className="text-slate-400 text-sm mb-6">
-          Propón al menos 5 nombres con su significado. El sufijo <span className="text-blue-400 font-mono">.mx</span> se agrega automáticamente.
+          Propón al menos 5 nombres con su significado. Elige la extensión que prefieras.
         </p>
 
         <ProgressBar value={completedCount} max={5} className="mb-8" color={allComplete ? "green" : "blue"} />
@@ -273,14 +355,19 @@ export default function SugerirPage() {
         <div className="space-y-4">
           {suggestions.map((s, i) => {
             const isComplete = s.domain_name.trim() && s.meaning.trim();
+            const check = duplicateChecks[i];
+            const hasDuplicate = check?.isDuplicate;
+            const isChecking = check?.checking;
+            const fullDomain = `${s.domain_name.trim().toLowerCase()}${s.extension}`;
+
             return (
               <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <GlowCard hover={false} className="relative">
+                <GlowCard hover={false} className={`relative ${hasDuplicate ? "border-red-500/30 bg-red-500/5" : ""}`}>
                   <div className="flex items-center gap-3 mb-3">
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                      isComplete ? "bg-emerald-500/20 text-emerald-400 border border-emerald-400/30" : "bg-white/5 text-slate-500 border border-white/10"
+                      isComplete && !hasDuplicate ? "bg-emerald-500/20 text-emerald-400 border border-emerald-400/30" : "bg-white/5 text-slate-500 border border-white/10"
                     }`}>
-                      {isComplete ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                      {isComplete && !hasDuplicate ? <Check className="w-3.5 h-3.5" /> : i + 1}
                     </div>
                     <span className="text-sm text-slate-400">Sugerencia {i + 1}{i >= 5 ? " (extra)" : ""}</span>
                     {i >= 5 && (
@@ -290,13 +377,39 @@ export default function SugerirPage() {
                     )}
                   </div>
                   <div className="space-y-3">
-                    <div className="relative">
-                      <input type="text" value={s.domain_name} onChange={e => updateSuggestion(i, "domain_name", e.target.value)}
-                        placeholder="nombre-del-dominio"
-                        className="w-full px-4 py-2.5 pr-16 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/50 text-sm font-mono"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 font-mono text-sm font-bold">.mx</span>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <input type="text" value={s.domain_name} onChange={e => updateSuggestion(i, "domain_name", e.target.value)}
+                          placeholder="nombre-del-dominio"
+                          className={`w-full px-4 py-2.5 pr-10 bg-white/5 border rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-1 text-sm font-mono ${
+                            hasDuplicate ? "border-red-500/50 focus:ring-red-500/50" : "border-white/10 focus:ring-blue-500/50"
+                          }`}
+                        />
+                        {isChecking && (
+                          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 animate-pulse" />
+                        )}
+                        {hasDuplicate && !isChecking && (
+                          <AlertTriangle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-red-400" />
+                        )}
+                      </div>
+                      <select
+                        value={s.extension}
+                        onChange={e => updateSuggestion(i, "extension", e.target.value)}
+                        className="px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50 min-w-[90px]"
+                      >
+                        {EXTENSIONS.map(ext => (
+                          <option key={ext.value} value={ext.value} className="bg-slate-800">{ext.label}</option>
+                        ))}
+                      </select>
                     </div>
+
+                    {hasDuplicate && (
+                      <p className="text-red-400 text-xs flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        Este dominio ya fue propuesto por otro usuario
+                      </p>
+                    )}
+
                     <textarea value={s.meaning} onChange={e => updateSuggestion(i, "meaning", e.target.value)}
                       placeholder="¿Qué significa o por qué lo elegiste?"
                       rows={2}
