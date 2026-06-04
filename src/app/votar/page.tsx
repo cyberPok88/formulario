@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
-import { Minus, Plus, Trophy, Loader2, ChevronRight } from "lucide-react";
+import { Minus, Plus, Trophy, Loader2, ChevronRight, Hash, Lock } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
 import { DomainBadge } from "@/components/ui/domain-badge";
 import type { User, Suggestion } from "@/lib/types";
@@ -26,6 +26,8 @@ export default function VotarPage() {
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pin, setPin] = useState("");
   const router = useRouter();
 
   const OPTIONS_PER_PAGE = 5;
@@ -101,27 +103,54 @@ export default function VotarPage() {
     });
   }
 
+  function handleSubmitClick() {
+    const voteData = Object.entries(votes).filter(([, v]) => v.points > 0);
+    if (voteData.length === 0) {
+      setError("Asigna al menos 1 punto");
+      return;
+    }
+    setError("");
+    setShowPinModal(true);
+    setPin("");
+  }
+
   async function handleSubmitRound() {
+    if (!pin || pin.length < 4) {
+      setError("El PIN debe tener al menos 4 dígitos");
+      return;
+    }
+
     setSubmitting(true);
     setError("");
     const voteData = Object.entries(votes).filter(([, v]) => v.points > 0).map(([id, v]) => ({ suggestion_id: id, points: v.points, tags: v.tags }));
-    if (voteData.length === 0) { setError("Asigna al menos 1 punto"); setSubmitting(false); return; }
 
     try {
       const res = await fetch("/api/votes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user!.id, round_number: roundNumber, votes: voteData }),
+        body: JSON.stringify({ user_id: user!.id, round_number: roundNumber, votes: voteData, pin }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "Error al votar"); setSubmitting(false); return; }
+      if (!res.ok) {
+        setError(data.error || "Error al votar");
+        setSubmitting(false);
+        if (data.error?.includes("PIN")) {
+          setPin("");
+        }
+        return;
+      }
 
       const newVoted = new Set(votedIds);
       for (const opt of currentOptions) newVoted.add(opt.id);
       setVotedIds(newVoted);
+      setShowPinModal(false);
+      setPin("");
       loadNextRound(allSuggestions, newVoted, roundNumber + 1);
       setSubmitting(false);
-    } catch { setError("Error de conexión"); setSubmitting(false); }
+    } catch {
+      setError("Error de conexión");
+      setSubmitting(false);
+    }
   }
 
   if (loading) {
@@ -234,13 +263,85 @@ export default function VotarPage() {
 
       <div className="fixed bottom-0 inset-x-0 bg-background/80 backdrop-blur-lg border-t border-white/10 p-4 z-20">
         <div className="max-w-2xl mx-auto">
-          <button onClick={handleSubmitRound} disabled={submitting || pointsUsed === 0}
-            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl transition-all text-lg"
+          <button onClick={handleSubmitClick} disabled={submitting || pointsUsed === 0}
+            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl transition-all text-lg flex items-center justify-center gap-2"
           >
+            <Lock className="w-4 h-4" />
             {submitting ? "Enviando..." : `Enviar votos · ${pointsUsed} puntos usados`}
           </button>
         </div>
       </div>
+
+      {/* PIN Modal */}
+      <AnimatePresence>
+        {showPinModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !submitting && setShowPinModal(false)} />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative z-10 w-full max-w-sm"
+            >
+              <GlowCard hover={false} className="p-6">
+                <div className="text-center mb-6">
+                  <div className="w-12 h-12 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center mx-auto mb-4">
+                    <Hash className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-1">Confirmar PIN</h3>
+                  <p className="text-sm text-slate-400">Ingresa tu PIN para validar tu voto</p>
+                </div>
+
+                <input
+                  type="password"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="4 a 6 dígitos"
+                  disabled={submitting}
+                  maxLength={6}
+                  autoFocus
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-center text-lg font-mono tracking-[0.5em] mb-4"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && pin.length >= 4 && !submitting) {
+                      handleSubmitRound();
+                    }
+                  }}
+                />
+
+                {error && (
+                  <p className="text-red-400 text-sm text-center mb-4">{error}</p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowPinModal(false)}
+                    disabled={submitting}
+                    className="flex-1 py-3 bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSubmitRound}
+                    disabled={submitting || pin.length < 4}
+                    className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:from-slate-700 disabled:to-slate-700 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
+                  >
+                    {submitting ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</>
+                    ) : (
+                      <>Confirmar</>
+                    )}
+                  </button>
+                </div>
+              </GlowCard>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

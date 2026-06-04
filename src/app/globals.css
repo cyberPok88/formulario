@@ -335,6 +335,11 @@
 }
 
 @layer base {
+  /* Tamaño de fuente base — 16px es más legible que el default del navegador (15px) */
+  html {
+    font-size: 16px;
+  }
+
   /* Aplicar border-color semántico a todos los elementos con border.
      Sin esta regla, los borders de Tailwind usan currentColor por defecto
      y aparecen del mismo color que el texto — no el color de borde del tema. */

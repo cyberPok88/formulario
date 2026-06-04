@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Pencil, Plus, Trash2, Send, ArrowLeft, ArrowRight, Loader2, Globe, Mail, ExternalLink, AtSign } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, Send, ArrowLeft, ArrowRight, Loader2, Globe, Mail, ExternalLink, AtSign, Hash } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
 import { DomainBadge } from "@/components/ui/domain-badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -145,8 +145,17 @@ export default function SugerirPage() {
             <ArrowLeft className="w-4 h-4" /> Volver a editar
           </button>
 
-          <h1 className="text-2xl font-bold text-white mb-1">Tus propuestas</h1>
-          <p className="text-slate-400 text-sm mb-6">Revisa antes de enviar. Puedes editar o agregar más.</p>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-white mb-1">Tus propuestas</h1>
+              <p className="text-slate-400 text-sm">Revisa antes de enviar. Puedes editar o agregar más.</p>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-400/20">
+              <Hash className="w-4 h-4 text-blue-400" />
+              <span className="text-blue-300 font-semibold">{suggestions.length}</span>
+              <span className="text-slate-400 text-sm">total</span>
+            </div>
+          </div>
 
           <div className="space-y-4">
             {suggestions.map((s, i) => {
@@ -170,48 +179,57 @@ export default function SugerirPage() {
                     </div>
                   ) : (
                     <>
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <DomainBadge name={s.domain_name} size="md" />
-                          <div className="mt-3 pl-1 border-l-2 border-indigo-500/30 ml-1">
-                            <p className="text-sm text-slate-300 pl-3 italic">&ldquo;{s.meaning}&rdquo;</p>
-                          </div>
+                      <div className="flex items-start gap-4">
+                        {/* Número de enumeración grande */}
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-400/30 flex items-center justify-center shrink-0">
+                          <span className="text-lg font-bold text-blue-300">{i + 1}</span>
                         </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button onClick={() => setEditingIndex(i)}
-                            className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
-                          ><Pencil className="w-4 h-4" /></button>
-                          {suggestions.length > 5 && (
-                            <button onClick={() => removeSuggestion(i)}
-                              className="p-2 rounded-lg hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-colors"
-                            ><Trash2 className="w-4 h-4" /></button>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <DomainBadge name={s.domain_name} size="md" />
+                              <div className="mt-3 pl-1 border-l-2 border-indigo-500/30 ml-1">
+                                <p className="text-sm text-slate-300 pl-3 italic">&ldquo;{s.meaning}&rdquo;</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button onClick={() => setEditingIndex(i)}
+                                className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                              ><Pencil className="w-4 h-4" /></button>
+                              {suggestions.length > 5 && (
+                                <button onClick={() => removeSuggestion(i)}
+                                  className="p-2 rounded-lg hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-colors"
+                                ><Trash2 className="w-4 h-4" /></button>
+                              )}
+                            </div>
+                          </div>
+
+                          {clean && (
+                            <div className="mt-4 pt-3 border-t border-white/5">
+                              <p className="text-[10px] uppercase tracking-widest text-slate-600 mb-2">Así se vería</p>
+                              <div className="flex flex-wrap gap-2">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
+                                  <ExternalLink className="w-3 h-3 text-blue-500/60" />
+                                  {clean}.mx
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
+                                  <Mail className="w-3 h-3 text-emerald-500/60" />
+                                  contacto@{clean}.mx
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
+                                  <ExternalLink className="w-3 h-3 text-indigo-500/60" />
+                                  {clean}.mx/proyectos
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
+                                  <AtSign className="w-3 h-3 text-amber-500/60" />
+                                  @{clean}.mx
+                                </span>
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
-
-                      {clean && (
-                        <div className="mt-4 pt-3 border-t border-white/5">
-                          <p className="text-[10px] uppercase tracking-widest text-slate-600 mb-2">Así se vería</p>
-                          <div className="flex flex-wrap gap-2">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
-                              <ExternalLink className="w-3 h-3 text-blue-500/60" />
-                              {clean}.mx
-                            </span>
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
-                              <Mail className="w-3 h-3 text-emerald-500/60" />
-                              contacto@{clean}.mx
-                            </span>
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
-                              <ExternalLink className="w-3 h-3 text-indigo-500/60" />
-                              {clean}.mx/proyectos
-                            </span>
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
-                              <AtSign className="w-3 h-3 text-amber-500/60" />
-                              @{clean}.mx
-                            </span>
-                          </div>
-                        </div>
-                      )}
                     </>
                   )}
                 </GlowCard>

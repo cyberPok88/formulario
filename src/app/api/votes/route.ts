@@ -1,5 +1,10 @@
 import { supabase } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
+
+function hashPin(pin: string): string {
+  return crypto.createHash("sha256").update(pin).digest("hex");
+}
 
 interface VoteInput {
   suggestion_id: string;
@@ -9,17 +14,31 @@ interface VoteInput {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { user_id, round_number, votes } = body as {
+  const { user_id, round_number, votes, pin } = body as {
     user_id: string;
     round_number: number;
     votes: VoteInput[];
+    pin: string;
   };
 
-  if (!user_id || !votes || !round_number) {
-    return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+  if (!user_id || !votes || !round_number || !pin) {
+    return NextResponse.json({ error: "Datos incompletos (PIN requerido)" }, { status: 400 });
   }
 
-  // Validate total points <= 5
+  const { data: user } = await supabase
+    .from("users")
+    .select("pin_hash")
+    .eq("id", user_id)
+    .maybeSingle();
+
+  if (!user || !user.pin_hash) {
+    return NextResponse.json({ error: "Usuario no encontrado o sin PIN" }, { status: 404 });
+  }
+
+  if (user.pin_hash !== hashPin(pin)) {
+    return NextResponse.json({ error: "PIN incorrecto" }, { status: 401 });
+  }
+
   const totalPoints = votes.reduce((sum, v) => sum + v.points, 0);
   if (totalPoints > 5) {
     return NextResponse.json(
@@ -28,7 +47,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Validate max 3 points per option
   if (votes.some((v) => v.points > 3)) {
     return NextResponse.json(
       { error: "Maximo 3 puntos por opcion" },
@@ -36,7 +54,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Insert votes (only those with points > 0)
   const votesWithPoints = votes.filter((v) => v.points > 0);
 
   for (const vote of votesWithPoints) {
@@ -58,7 +75,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert tags for this vote
     if (vote.tags.length > 0) {
       const tagRows = vote.tags.map((tag) => ({
         vote_id: voteData.id,
