@@ -7,8 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Minus, Plus, Trophy, Loader2, ChevronRight, Hash, Lock } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
 import { DomainBadge } from "@/components/ui/domain-badge";
-import type { User, Suggestion } from "@/lib/types";
-import { TAG_LABELS } from "@/lib/types";
+import type { User, Suggestion, VoteTag } from "@/lib/types";
+import { TAG_CONFIG } from "@/lib/types";
 
 interface VoteState {
   points: number;
@@ -236,17 +236,27 @@ export default function VotarPage() {
                     {hasPoints && (
                       <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
                         <div className="mt-4 pt-4 border-t border-white/10">
-                          <p className="text-xs text-slate-500 mb-2">¿Por qué te gustó? (opcional)</p>
+                          <p className="text-xs text-slate-500 mb-3">¿Por qué te gustó? (opcional)</p>
                           <div className="flex flex-wrap gap-2">
-                            {Object.entries(TAG_LABELS).map(([key, label]) => (
-                              <button key={key} onClick={() => toggleTag(option.id, key)}
-                                className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
-                                  vote.tags.includes(key)
-                                    ? "bg-blue-500/20 border-blue-400/40 text-blue-300"
-                                    : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20"
-                                }`}
-                              >{label}</button>
-                            ))}
+                            {(Object.entries(TAG_CONFIG) as [VoteTag["tag"], typeof TAG_CONFIG[VoteTag["tag"]]][]).map(([key, config]) => {
+                              const isSelected = vote.tags.includes(key);
+                              return (
+                                <motion.button
+                                  key={key}
+                                  onClick={() => toggleTag(option.id, key)}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all font-medium ${
+                                    isSelected
+                                      ? `bg-white/10 ${config.selectedBorder} ${config.selectedColor} shadow-lg`
+                                      : `bg-white/5 ${config.borderColor} ${config.color} hover:bg-white/10`
+                                  }`}
+                                >
+                                  <span className="text-lg">{config.emoji}</span>
+                                  <span className="text-sm">{config.label}</span>
+                                </motion.button>
+                              );
+                            })}
                           </div>
                         </div>
                       </motion.div>

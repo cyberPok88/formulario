@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Pencil, Plus, Trash2, Send, ArrowLeft, ArrowRight, Loader2, Globe, Mail, ExternalLink, AtSign, Hash, AlertTriangle, Search } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, Send, ArrowLeft, ArrowRight, Loader2, Globe, Mail, ExternalLink, AtSign, Hash, AlertTriangle, Search, Vote, Clock, Users, BarChart3 } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
 import { DomainBadge } from "@/components/ui/domain-badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -46,6 +46,7 @@ export default function SugerirPage() {
   const [error, setError] = useState("");
   const [stats, setStats] = useState<{ total_suggestions: number; total_participants: number } | null>(null);
   const [duplicateChecks, setDuplicateChecks] = useState<Record<number, DuplicateCheck>>({});
+  const [phaseInfo, setPhaseInfo] = useState<{ phase: string; participants: number; suggestions: number } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -53,6 +54,25 @@ export default function SugerirPage() {
     if (!stored) { router.push("/"); return; }
     setUser(JSON.parse(stored));
   }, [router]);
+
+  useEffect(() => {
+    async function loadPhaseInfo() {
+      try {
+        const [configRes, statsRes] = await Promise.all([
+          fetch("/api/config"),
+          fetch("/api/suggestions"),
+        ]);
+        const config = await configRes.json();
+        const statsData = await statsRes.json();
+        setPhaseInfo({
+          phase: config.phase,
+          participants: statsData.stats?.total_participants ?? 0,
+          suggestions: statsData.stats?.total_suggestions ?? 0,
+        });
+      } catch { /* silent */ }
+    }
+    loadPhaseInfo();
+  }, []);
 
   const completedCount = suggestions.filter(s => s.domain_name.trim() && s.meaning.trim()).length;
   const allComplete = completedCount >= 5;
@@ -166,39 +186,119 @@ export default function SugerirPage() {
   if (!user) return null;
 
   if (phase === "done") {
+    const isVotingPhase = phaseInfo?.phase === "voting" || phaseInfo?.phase === "closed";
+
     return (
       <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative z-10">
-          <GlowCard hover={false} className="max-w-md text-center p-10">
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: "spring" }}
-              className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center mx-auto mb-6"
-            >
-              <Check className="w-8 h-8 text-emerald-400" />
-            </motion.div>
-            <h2 className="text-2xl font-bold text-white mb-2">{suggestions.length} sugerencias enviadas</h2>
-            <p className="text-slate-400 mb-6">Gracias {user.username}!</p>
+        <div className="relative z-10 max-w-lg mx-auto py-12">
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+            {/* Header de éxito */}
+            <div className="text-center mb-8">
+              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: "spring" }}
+                className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center mx-auto mb-4"
+              >
+                <Check className="w-8 h-8 text-emerald-400" />
+              </motion.div>
+              <h1 className="text-2xl font-bold text-white mb-2">¡Propuestas enviadas!</h1>
+              <p className="text-slate-400">Gracias {user.username}, tu participación fue registrada.</p>
+            </div>
 
-            {stats && (
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-                  <p className="text-2xl font-bold text-blue-400">{stats.total_suggestions}</p>
-                  <p className="text-xs text-slate-500">sugerencias totales</p>
+            {/* Stats del usuario */}
+            <GlowCard hover={false} className="p-6 mb-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center">
+                  <BarChart3 className="w-5 h-5 text-blue-400" />
                 </div>
-                <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-                  <p className="text-2xl font-bold text-indigo-400">{stats.total_participants}</p>
-                  <p className="text-xs text-slate-500">participantes</p>
+                <div>
+                  <h3 className="text-white font-semibold">Tu resumen</h3>
+                  <p className="text-sm text-slate-400">Propuestas registradas</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-white/5 border border-white/10 p-4 text-center">
+                  <p className="text-3xl font-bold text-blue-400">{suggestions.length}</p>
+                  <p className="text-xs text-slate-500 mt-1">tus sugerencias</p>
+                </div>
+                <div className="rounded-xl bg-white/5 border border-white/10 p-4 text-center">
+                  <p className="text-3xl font-bold text-indigo-400">{stats?.total_suggestions ?? 0}</p>
+                  <p className="text-xs text-slate-500 mt-1">total en la bdd</p>
+                </div>
+              </div>
+            </GlowCard>
+
+            {/* Estado de la fase */}
+            <GlowCard hover={false} className="p-6 mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-400/30 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold">Estado actual</h3>
+                  <p className="text-sm text-slate-400">Fase del proyecto</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-slate-400" />
+                    <span className="text-sm text-slate-300">Participantes</span>
+                  </div>
+                  <span className="text-white font-semibold">{phaseInfo?.participants ?? stats?.total_participants ?? 0}</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-slate-400" />
+                    <span className="text-sm text-slate-300">Fase actual</span>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                    phaseInfo?.phase === "suggestions"
+                      ? "bg-blue-500/20 text-blue-300"
+                      : phaseInfo?.phase === "voting"
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : "bg-amber-500/20 text-amber-300"
+                  }`}>
+                    {phaseInfo?.phase === "suggestions" ? "Sugerencias" : phaseInfo?.phase === "voting" ? "Votación" : "Cerrada"}
+                  </span>
+                </div>
+              </div>
+            </GlowCard>
+
+            {/* Botón de votación */}
+            {phaseInfo?.phase === "suggestions" && (
+              <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <Vote className="w-5 h-5 text-blue-400 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm text-blue-300 font-medium">La votación aún no comienza</p>
+                    <p className="text-xs text-slate-400">Se habilitará cuando el admin cambie la fase</p>
+                  </div>
                 </div>
               </div>
             )}
 
+            <button
+              onClick={() => router.push("/votar")}
+              disabled={!isVotingPhase}
+              className={`w-full py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-lg ${
+                isVotingPhase
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white"
+                  : "bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5"
+              }`}
+            >
+              <Vote className="w-5 h-5" />
+              {isVotingPhase ? "Ir a Votaciones" : "Votación no disponible"}
+            </button>
+
             <button onClick={() => router.push("/")}
-              className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 transition-colors text-sm"
+              className="w-full mt-3 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors text-sm"
             >
               Volver al inicio
             </button>
-          </GlowCard>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
     );
   }
