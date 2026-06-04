@@ -1,15 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Clock, Users, FileText, Vote, Eye, LogOut, Loader2, ListChecks, ArrowLeft, UsersRound } from "lucide-react";
+import { Clock, Users, FileText, Vote, Eye, LogOut, Loader2, ListChecks, ArrowLeft, UsersRound, Sparkles } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
 import { DomainBadge } from "@/components/ui/domain-badge";
 import { getSession, clearSession } from "@/lib/session";
 import type { User, Suggestion } from "@/lib/types";
 
 const MIN_PARTICIPANTS = 8;
+
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 export default function PreVotacionPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -18,6 +27,8 @@ export default function PreVotacionPage() {
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const router = useRouter();
+
+  const shuffledSuggestions = useMemo(() => shuffleArray(suggestions), [suggestions]);
 
   useEffect(() => {
     const session = getSession();
@@ -187,31 +198,41 @@ export default function PreVotacionPage() {
             animate={{ opacity: 1, height: "auto" }}
             className="space-y-3 mb-8"
           >
-            {suggestions.map((s, i) => (
-              <motion.div
-                key={s.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-              >
-                <GlowCard hover={false} className="py-3 px-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center shrink-0">
-                      <span className="text-sm font-bold text-blue-300">{i + 1}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <DomainBadge name={s.domain_name} size="sm" />
-                      {(s.initial_votes ?? 1) > 1 && (
-                        <div className="flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-400/20 w-fit">
-                          <UsersRound className="w-3 h-3 text-emerald-400" />
-                          <span className="text-xs text-emerald-300">{s.initial_votes} personas con la misma idea</span>
+            {shuffledSuggestions.map((s, i) => {
+              const isOwn = s.user_id === user?.id;
+              return (
+                <motion.div
+                  key={s.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.03 }}
+                >
+                  <GlowCard hover={false} className={`py-3 px-4 ${isOwn ? "border-amber-400/40 bg-amber-500/5" : ""}`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isOwn ? "bg-amber-500/20 border border-amber-400/30" : "bg-blue-500/20 border border-blue-400/30"}`}>
+                        <span className={`text-sm font-bold ${isOwn ? "text-amber-300" : "text-blue-300"}`}>{i + 1}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <DomainBadge name={s.domain_name} size="sm" />
+                          {isOwn && (
+                            <span className="flex items-center gap-1 text-xs text-amber-400 bg-amber-500/10 border border-amber-400/20 rounded-lg px-2 py-0.5">
+                              <Sparkles className="w-3 h-3" /> Tuya
+                            </span>
+                          )}
                         </div>
-                      )}
+                        {(s.initial_votes ?? 1) > 1 && (
+                          <div className="flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-400/20 w-fit">
+                            <UsersRound className="w-3 h-3 text-emerald-400" />
+                            <span className="text-xs text-emerald-300">{s.initial_votes} personas con la misma idea</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </GlowCard>
-              </motion.div>
-            ))}
+                  </GlowCard>
+                </motion.div>
+              );
+            })}
           </motion.div>
         )}
 
