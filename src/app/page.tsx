@@ -4,14 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
-import { Globe, Sparkles, Type, ArrowRight, Loader2, Users, Vote, Shield, Hash, Play } from "lucide-react";
+import { Globe, Sparkles, Type, Loader2, Users, Vote, Shield, Hash, Play, LogIn } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
+import { getSession, saveSession } from "@/lib/session";
 
 const REQUISITOS = [
   {
     icon: Globe,
-    title: "Extension .mx",
-    desc: "Se derermino el uso de .mx como base, pero puedes cambiar la extención como prefieras. Tú decides cuál representa mejor al proyecto.",
+    title: "Extensiones libres",
+    desc: "Elige entre .mx, .com.mx, .lat, .dev, .io y más. Tú decides cuál representa mejor al proyecto.",
     color: "text-blue-400",
     bgColor: "bg-blue-500/10",
     borderColor: "border-blue-400/20",
@@ -41,6 +42,8 @@ const PASOS = [
   { num: "4", titulo: "Resultado final", desc: "El dominio con más votos gana", color: "from-amber-500 to-amber-600" },
 ];
 
+const MIN_PARTICIPANTS = 8;
+
 export default function Home() {
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState("");
@@ -48,6 +51,14 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [phaseInfo, setPhaseInfo] = useState<{ phase: string; participants: number; suggestions: number } | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const session = getSession();
+    if (session) {
+      router.push("/dashboard");
+      return;
+    }
+  }, [router]);
 
   useEffect(() => {
     async function loadStatus() {
@@ -102,7 +113,7 @@ export default function Home() {
       }
 
       const user = authData.user;
-      localStorage.setItem("vote_user", JSON.stringify(user));
+      saveSession(user);
 
       const res = await fetch("/api/config");
       const config = await res.json();
@@ -115,8 +126,7 @@ export default function Home() {
           .limit(1);
 
         if (existing && existing.length > 0) {
-          setError("Ya enviaste tus sugerencias. Espera la fase de votación.");
-          setLoading(false);
+          router.push("/dashboard");
           return;
         }
         router.push("/sugerir");
@@ -131,14 +141,14 @@ export default function Home() {
     }
   }
 
+  const canGoToVoting = phaseInfo && phaseInfo.participants >= MIN_PARTICIPANTS && phaseInfo.phase === "voting";
+
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Ambient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-blue-600/15 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 translate-x-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-12 sm:py-20">
-        {/* Header badge */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -150,7 +160,6 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* Hero */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -171,7 +180,6 @@ export default function Home() {
           </p>
         </motion.div>
 
-        {/* Cómo funciona - Sección prominente */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -201,7 +209,6 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* Requisitos */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -230,7 +237,6 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* Phase status banner */}
         {phaseInfo && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -239,16 +245,16 @@ export default function Home() {
             className="max-w-md mx-auto mb-8"
           >
             {phaseInfo.phase === "suggestions" && (
-              <div className={`rounded-xl border p-4 flex items-center gap-3 ${phaseInfo.participants >= 5
+              <div className={`rounded-xl border p-4 flex items-center gap-3 ${phaseInfo.participants >= MIN_PARTICIPANTS
                 ? "bg-emerald-500/5 border-emerald-400/20"
                 : "bg-blue-500/5 border-blue-400/20"
                 }`}>
-                <Users className={`w-5 h-5 shrink-0 ${phaseInfo.participants >= 5 ? "text-emerald-400" : "text-blue-400"}`} />
+                <Users className={`w-5 h-5 shrink-0 ${phaseInfo.participants >= MIN_PARTICIPANTS ? "text-emerald-400" : "text-blue-400"}`} />
                 <div className="flex-1">
-                  <p className={`text-sm font-medium ${phaseInfo.participants >= 5 ? "text-emerald-300" : "text-blue-300"}`}>
-                    {phaseInfo.participants >= 5
-                      ? `${phaseInfo.participants} participantes listos — la votación puede iniciar`
-                      : `${phaseInfo.participants} de 5 participantes — faltan ${5 - phaseInfo.participants}`
+                  <p className={`text-sm font-medium ${phaseInfo.participants >= MIN_PARTICIPANTS ? "text-emerald-300" : "text-blue-300"}`}>
+                    {phaseInfo.participants >= MIN_PARTICIPANTS
+                      ? `${phaseInfo.participants} participantes listos — ¡las votaciones pueden comenzar!`
+                      : `${phaseInfo.participants} de ${MIN_PARTICIPANTS} participantes — faltan ${MIN_PARTICIPANTS - phaseInfo.participants}`
                     }
                   </p>
                   <p className="text-xs text-slate-400 mt-0.5">{phaseInfo.suggestions} sugerencias recibidas</p>
@@ -270,7 +276,6 @@ export default function Home() {
           </motion.div>
         )}
 
-        {/* Registro form */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -327,6 +332,36 @@ export default function Home() {
                 )}
               </button>
             </form>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-transparent text-slate-500">o</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => router.push("/pre-votacion")}
+              disabled={!canGoToVoting}
+              className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 text-lg ${
+                canGoToVoting
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white"
+                  : "bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5"
+              }`}
+            >
+              <LogIn className="w-5 h-5" />
+              IR A VOTAR
+            </button>
+
+            {!canGoToVoting && phaseInfo?.phase === "suggestions" && (
+              <p className="text-xs text-slate-500 text-center mt-2">
+                {phaseInfo.participants < MIN_PARTICIPANTS
+                  ? `Se habilita con ${MIN_PARTICIPANTS} participantes (faltan ${MIN_PARTICIPANTS - phaseInfo.participants})`
+                  : "Esperando activación de votaciones"}
+              </p>
+            )}
 
             {error && (
               <motion.p

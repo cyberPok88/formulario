@@ -3,11 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Pencil, Plus, Trash2, Send, ArrowLeft, ArrowRight, Loader2, Globe, Mail, ExternalLink, AtSign, Hash, AlertTriangle, Search, Vote, Clock, Users, BarChart3 } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, Send, ArrowLeft, ArrowRight, Loader2, Globe, Mail, ExternalLink, AtSign, Hash, AlertTriangle, Search, Vote, Clock, Users, BarChart3, Eye } from "lucide-react";
 import { GlowCard } from "@/components/ui/glow-card";
 import { DomainBadge } from "@/components/ui/domain-badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import type { User } from "@/lib/types";
+
+const MIN_PARTICIPANTS = 8;
 
 const EXTENSIONS = [
   { value: ".mx", label: ".mx" },
@@ -55,6 +57,8 @@ export default function SugerirPage() {
     setUser(JSON.parse(stored));
   }, [router]);
 
+  const [blocked, setBlocked] = useState(false);
+
   useEffect(() => {
     async function loadPhaseInfo() {
       try {
@@ -64,11 +68,15 @@ export default function SugerirPage() {
         ]);
         const config = await configRes.json();
         const statsData = await statsRes.json();
+        const participants = statsData.stats?.total_participants ?? 0;
         setPhaseInfo({
           phase: config.phase,
-          participants: statsData.stats?.total_participants ?? 0,
+          participants,
           suggestions: statsData.stats?.total_suggestions ?? 0,
         });
+        if (participants >= MIN_PARTICIPANTS && config.phase === "suggestions") {
+          setBlocked(true);
+        }
       } catch { /* silent */ }
     }
     loadPhaseInfo();
@@ -185,6 +193,33 @@ export default function SugerirPage() {
 
   if (!user) return null;
 
+  if (blocked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="relative z-10 max-w-lg mx-auto text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-400/30 flex items-center justify-center mx-auto mb-6">
+              <Clock className="w-8 h-8 text-amber-400" />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-3">Sugerencias cerradas</h1>
+            <p className="text-slate-400 mb-8">
+              Ya hay {phaseInfo?.participants} participantes registrados. La fase de sugerencias está cerrada.
+              <br />
+              Las votaciones se habilitarán pronto.
+            </p>
+            <button
+              onClick={() => router.push("/pre-votacion")}
+              className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition-all"
+            >
+              Ver opciones propuestas
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
   if (phase === "done") {
     const isVotingPhase = phaseInfo?.phase === "voting" || phaseInfo?.phase === "closed";
 
@@ -270,27 +305,36 @@ export default function SugerirPage() {
             {phaseInfo?.phase === "suggestions" && (
               <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 mb-4">
                 <div className="flex items-center gap-3">
-                  <Vote className="w-5 h-5 text-blue-400 shrink-0" />
+                  <Clock className="w-5 h-5 text-blue-400 shrink-0" />
                   <div className="flex-1">
-                    <p className="text-sm text-blue-300 font-medium">La votación aún no comienza</p>
-                    <p className="text-xs text-slate-400">Se habilitará cuando el admin cambie la fase</p>
+                    <p className="text-sm text-blue-300 font-medium">Las votaciones comenzarán pronto</p>
+                    <p className="text-xs text-slate-400">
+                      Se habilitarán cuando haya al menos {MIN_PARTICIPANTS} participantes y el admin active la fase.
+                    </p>
                   </div>
                 </div>
               </div>
             )}
 
-            <button
-              onClick={() => router.push("/votar")}
-              disabled={!isVotingPhase}
-              className={`w-full py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-lg ${
-                isVotingPhase
-                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white"
-                  : "bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5"
-              }`}
-            >
-              <Vote className="w-5 h-5" />
-              {isVotingPhase ? "Ir a Votaciones" : "Votación no disponible"}
-            </button>
+            <div className="space-y-3">
+              {isVotingPhase && (
+                <button
+                  onClick={() => router.push("/votar")}
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold transition-all flex items-center justify-center gap-2 text-lg"
+                >
+                  <Vote className="w-5 h-5" />
+                  Ir a Votaciones
+                </button>
+              )}
+
+              <button
+                onClick={() => router.push("/pre-votacion")}
+                className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+              >
+                <Eye className="w-5 h-5" />
+                Ver listado de opciones
+              </button>
+            </div>
 
             <button onClick={() => router.push("/")}
               className="w-full mt-3 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors text-sm"
