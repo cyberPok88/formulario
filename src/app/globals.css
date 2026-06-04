@@ -1,0 +1,372 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PALETA SLATE — LIGHT (predeterminada, sin data-theme)
+     Azul-grisáceo neutro con acento índigo.
+     La paleta más versátil: ERP, inventarios, procesos, dashboards.
+     Profesional sin ser fría. Legible en sesiones largas.
+     ═══════════════════════════════════════════════════════════════════ */
+  :root {
+
+    /* ── FONDOS BASE ──────────────────────────────────────────────────
+       background: fondo principal de la app. Matiz azul-gris muy suave
+       (no blanco puro) para reducir fatiga visual en sesiones largas.
+       ──────────────────────────────────────────────────────────────── */
+    --color-background:         220 20% 97%;
+    --color-foreground:         222 47% 11%;
+    --color-muted-foreground:   215 16% 47%;
+    --color-border:             220 13% 91%;
+
+    /* ── CAPAS DE SUPERFICIE ──────────────────────────────────────────
+       Tres niveles de elevación para cards, dropdowns y modales.
+       Cada capa sube 2% en lightness para separar sin usar sombras fuertes.
+       ──────────────────────────────────────────────────────────────── */
+    --color-surface:            0 0% 100%;
+    --color-surface-raised:     220 20% 99%;
+    --color-surface-overlay:    0 0% 100%;
+    --color-hover-background:   220 13% 95%;
+
+    /* ── SIDEBAR ──────────────────────────────────────────────────────
+       Valor fijo en las 6 combinaciones — el sidebar no cambia con el tema.
+       Es el ancla visual de navegación: siempre oscuro, siempre reconocible.
+       ──────────────────────────────────────────────────────────────── */
+    --color-sidebar:            220 13% 10%;
+    --color-sidebar-foreground: 220 13% 70%;
+    --color-sidebar-hover:      220 13% 16%;
+
+    /* ── ACCENT PRIMARIO — Índigo ─────────────────────────────────────
+       Color de acción principal: botones CTA, links activos, selección.
+       Índigo (221°) — profesional, confiable, sin ser clínico.
+       ──────────────────────────────────────────────────────────────── */
+    --color-primary-accent:      221 83% 53%;
+    --color-primary-accent-bg:   221 100% 97%;
+    --color-primary-accent-text: 0 0% 100%;
+
+    /* ── ACCENT SECUNDARIO — Violeta ──────────────────────────────────
+       Para acciones secundarias, tags, categorías visuales.
+       Complementa al índigo sin competir con él.
+       ──────────────────────────────────────────────────────────────── */
+    --color-secondary-accent:      262 83% 58%;
+    --color-secondary-accent-bg:   262 100% 97%;
+    --color-secondary-accent-text: 0 0% 100%;
+
+    /* ── ESTADOS DE FEEDBACK ──────────────────────────────────────────
+       Los 4 estados obligatorios. Cada uno tiene color principal y
+       fondo sutil para badges, alertas y banners sin hardcodear colores.
+       ──────────────────────────────────────────────────────────────── */
+    --color-success:     142 72% 36%;
+    --color-success-bg:  142 72% 95%;
+    --color-warning:     38 92% 45%;
+    --color-warning-bg:  38 92% 95%;
+    --color-error:       0 84% 55%;
+    --color-error-bg:    0 84% 96%;
+    --color-info:        199 89% 40%;
+    --color-info-bg:     199 89% 95%;
+
+    /* ── PALETA DE DATOS ──────────────────────────────────────────────
+       4 colores para gráficas, badges de estado y categorías en tablas.
+       Separados en hue mínimo 60° para distinguibilidad con daltonismo.
+       índigo (221°) → verde (142°) → ámbar (38°) → teal (178°)
+       ──────────────────────────────────────────────────────────────── */
+    --color-chart-1:    221 83% 53%;
+    --color-chart-2:    142 72% 36%;
+    --color-chart-3:    38 92% 45%;
+    --color-chart-4:    178 70% 38%;
+
+    /* ── RADIO DE BORDES ──────────────────────────────────────────────
+       Variable global que controla todos los border-radius del sistema.
+       Cambiar este valor solo aquí actualiza tarjetas, botones, inputs
+       y cualquier componente que use rounded-lg, rounded-md, rounded-sm.
+       ──────────────────────────────────────────────────────────────── */
+    --radius: 0.625rem;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PALETA SLATE — DARK
+     Los acentos suben en lightness (53% → 62%) porque sobre fondos
+     oscuros el mismo color se percibe más apagado. Sin este ajuste,
+     los botones CTA parecen desactivados en modo oscuro.
+     ═══════════════════════════════════════════════════════════════════ */
+  .dark {
+
+    /* Fondos oscuros escalonados — no negro puro para evitar contraste
+       excesivo. Matiz azul-oscuro (222°) cohesiona con el acento índigo. */
+    --color-background:         222 47% 8%;
+    --color-foreground:         210 40% 95%;
+    --color-muted-foreground:   215 20% 55%;
+    --color-border:             217 32% 18%;
+
+    /* Capas de superficie en dark: suben en lightness para crear elevación */
+    --color-surface:            222 47% 11%;
+    --color-surface-raised:     222 47% 14%;
+    --color-surface-overlay:    222 47% 16%;
+    --color-hover-background:   217 32% 16%;
+
+    /* Sidebar: mismo valor que light — ancla visual inmutable */
+    --color-sidebar:            220 13% 10%;
+    --color-sidebar-foreground: 220 13% 65%;
+    --color-sidebar-hover:      220 13% 16%;
+
+    /* Acento primario: +9% lightness respecto al light (53% → 62%) */
+    --color-primary-accent:      217 91% 62%;
+    --color-primary-accent-bg:   222 47% 16%;
+    --color-primary-accent-text: 0 0% 100%;
+
+    /* Acento secundario: +7% lightness */
+    --color-secondary-accent:      262 83% 65%;
+    --color-secondary-accent-bg:   262 83% 16%;
+    --color-secondary-accent-text: 0 0% 100%;
+
+    /* Estados de feedback: en dark, los fondos son oscuros (12%) no claros (95%) */
+    --color-success:     142 72% 46%;
+    --color-success-bg:  142 72% 12%;
+    --color-warning:     38 92% 52%;
+    --color-warning-bg:  38 92% 12%;
+    --color-error:       0 84% 62%;
+    --color-error-bg:    0 84% 12%;
+    --color-info:        199 89% 52%;
+    --color-info-bg:     199 89% 12%;
+
+    /* Chart colors: +8-10% lightness en dark para mantener visibilidad */
+    --color-chart-1:    217 91% 62%;
+    --color-chart-2:    142 72% 46%;
+    --color-chart-3:    38 92% 52%;
+    --color-chart-4:    178 70% 48%;
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PALETA ZINC — LIGHT  [data-theme="zinc"]
+     Monocromático cálido con acento ámbar-naranja.
+     Para negocios con carácter: ferreterías, cafeterías, talleres.
+     Evoca materiales, calidez, lo tangible. Menos corporativo.
+     ═══════════════════════════════════════════════════════════════════ */
+  [data-theme="zinc"] {
+
+    /* Fondos: warm gray (matiz 30°) — más cálido que el slate neutro */
+    --color-background:         30 10% 96%;
+    --color-foreground:         20 14% 10%;
+    --color-muted-foreground:   20 8% 45%;
+    --color-border:             30 8% 88%;
+
+    --color-surface:            0 0% 100%;
+    --color-surface-raised:     30 10% 98%;
+    --color-surface-overlay:    0 0% 100%;
+    --color-hover-background:   30 8% 93%;
+
+    /* Sidebar: idéntico al slate — ancla visual no cambia entre paletas */
+    --color-sidebar:            220 13% 10%;
+    --color-sidebar-foreground: 220 13% 70%;
+    --color-sidebar-hover:      220 13% 16%;
+
+    /* Acento primario — Ámbar oscuro: decisivo, cálido, visible */
+    --color-primary-accent:      32 95% 40%;
+    --color-primary-accent-bg:   32 95% 95%;
+    --color-primary-accent-text: 0 0% 100%;
+
+    /* Acento secundario — Naranja quemado: complementa sin saturar */
+    --color-secondary-accent:      18 90% 48%;
+    --color-secondary-accent-bg:   18 90% 95%;
+    --color-secondary-accent-text: 0 0% 100%;
+
+    /* Estados de feedback: mismos valores que slate — son semánticos */
+    --color-success:     142 72% 36%;
+    --color-success-bg:  142 72% 95%;
+    --color-warning:     38 92% 45%;
+    --color-warning-bg:  38 92% 95%;
+    --color-error:       0 84% 55%;
+    --color-error-bg:    0 84% 96%;
+    --color-info:        199 89% 40%;
+    --color-info-bg:     199 89% 95%;
+
+    /* Chart: ámbar como chart-1 para cohesión con el acento de la paleta */
+    --color-chart-1:    32 95% 40%;
+    --color-chart-2:    142 72% 36%;
+    --color-chart-3:    221 83% 53%;
+    --color-chart-4:    18 90% 48%;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PALETA ZINC — DARK  [data-theme="zinc"].dark
+     ═══════════════════════════════════════════════════════════════════ */
+  .dark[data-theme="zinc"],
+  [data-theme="zinc"].dark {
+
+    /* Fondos: warm dark — evita el azul-oscuro del slate para mantener
+       la calidez de la paleta incluso en modo oscuro */
+    --color-background:         20 8% 8%;
+    --color-foreground:         30 10% 94%;
+    --color-muted-foreground:   20 6% 55%;
+    --color-border:             20 6% 18%;
+
+    --color-surface:            20 8% 11%;
+    --color-surface-raised:     20 8% 14%;
+    --color-surface-overlay:    20 8% 16%;
+    --color-hover-background:   20 6% 16%;
+
+    --color-sidebar:            220 13% 10%;
+    --color-sidebar-foreground: 220 13% 65%;
+    --color-sidebar-hover:      220 13% 16%;
+
+    /* Acento ámbar: sube lightness (40% → 55%) para no perderse en dark */
+    --color-primary-accent:      32 95% 55%;
+    --color-primary-accent-bg:   32 95% 14%;
+    --color-primary-accent-text: 20 14% 6%;
+
+    --color-secondary-accent:      18 90% 58%;
+    --color-secondary-accent-bg:   18 90% 14%;
+    --color-secondary-accent-text: 20 14% 6%;
+
+    --color-success:     142 72% 46%;
+    --color-success-bg:  142 72% 12%;
+    --color-warning:     38 92% 52%;
+    --color-warning-bg:  38 92% 12%;
+    --color-error:       0 84% 62%;
+    --color-error-bg:    0 84% 12%;
+    --color-info:        199 89% 52%;
+    --color-info-bg:     199 89% 12%;
+
+    --color-chart-1:    32 95% 55%;
+    --color-chart-2:    142 72% 46%;
+    --color-chart-3:    217 91% 62%;
+    --color-chart-4:    18 90% 58%;
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PALETA OCEAN — LIGHT  [data-theme="ocean"]
+     Azul profundo con acento teal-cian.
+     Para contextos técnicos e institucionales: clínicas, industria
+     de precisión, procesos médicos, laboratorios.
+     Evoca confianza, exactitud, higiene.
+     ═══════════════════════════════════════════════════════════════════ */
+  [data-theme="ocean"] {
+
+    /* Fondo: azul muy pálido (210°, 95% lightness) — limpio, clínico */
+    --color-background:         210 40% 96%;
+    --color-foreground:         213 50% 10%;
+    --color-muted-foreground:   213 20% 46%;
+    --color-border:             210 30% 88%;
+
+    --color-surface:            0 0% 100%;
+    --color-surface-raised:     210 40% 98%;
+    --color-surface-overlay:    0 0% 100%;
+    --color-hover-background:   210 30% 93%;
+
+    --color-sidebar:            220 13% 10%;
+    --color-sidebar-foreground: 220 13% 70%;
+    --color-sidebar-hover:      220 13% 16%;
+
+    /* Acento primario — Teal (178°): preciso, técnico, diferenciado
+       del slate-índigo por 43° de hue — claramente distinto en pantalla */
+    --color-primary-accent:      178 72% 34%;
+    --color-primary-accent-bg:   178 72% 94%;
+    --color-primary-accent-text: 0 0% 100%;
+
+    /* Acento secundario — Cian: complementa el teal con más brillo */
+    --color-secondary-accent:      194 85% 38%;
+    --color-secondary-accent-bg:   194 85% 94%;
+    --color-secondary-accent-text: 0 0% 100%;
+
+    --color-success:     142 72% 36%;
+    --color-success-bg:  142 72% 95%;
+    --color-warning:     38 92% 45%;
+    --color-warning-bg:  38 92% 95%;
+    --color-error:       0 84% 55%;
+    --color-error-bg:    0 84% 96%;
+    --color-info:        199 89% 40%;
+    --color-info-bg:     199 89% 95%;
+
+    /* Chart: teal como chart-1, cohesión con el acento */
+    --color-chart-1:    178 72% 34%;
+    --color-chart-2:    142 72% 36%;
+    --color-chart-3:    38 92% 45%;
+    --color-chart-4:    221 83% 53%;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PALETA OCEAN — DARK  [data-theme="ocean"].dark
+     ═══════════════════════════════════════════════════════════════════ */
+  .dark[data-theme="ocean"],
+  [data-theme="ocean"].dark {
+
+    /* Fondos: azul-marino profundo — cohesiona con el acento teal */
+    --color-background:         213 50% 7%;
+    --color-foreground:         210 40% 95%;
+    --color-muted-foreground:   213 20% 55%;
+    --color-border:             213 30% 17%;
+
+    --color-surface:            213 50% 10%;
+    --color-surface-raised:     213 50% 13%;
+    --color-surface-overlay:    213 50% 15%;
+    --color-hover-background:   213 30% 15%;
+
+    --color-sidebar:            220 13% 10%;
+    --color-sidebar-foreground: 220 13% 65%;
+    --color-sidebar-hover:      220 13% 16%;
+
+    /* Teal: sube lightness (34% → 50%) para mantener visibilidad en dark */
+    --color-primary-accent:      178 72% 50%;
+    --color-primary-accent-bg:   178 72% 12%;
+    --color-primary-accent-text: 213 50% 5%;
+
+    --color-secondary-accent:      194 85% 52%;
+    --color-secondary-accent-bg:   194 85% 12%;
+    --color-secondary-accent-text: 213 50% 5%;
+
+    --color-success:     142 72% 46%;
+    --color-success-bg:  142 72% 12%;
+    --color-warning:     38 92% 52%;
+    --color-warning-bg:  38 92% 12%;
+    --color-error:       0 84% 62%;
+    --color-error-bg:    0 84% 12%;
+    --color-info:        199 89% 52%;
+    --color-info-bg:     199 89% 12%;
+
+    --color-chart-1:    178 72% 50%;
+    --color-chart-2:    142 72% 46%;
+    --color-chart-3:    38 92% 52%;
+    --color-chart-4:    221 83% 62%;
+  }
+}
+
+@layer base {
+  /* Aplicar border-color semántico a todos los elementos con border.
+     Sin esta regla, los borders de Tailwind usan currentColor por defecto
+     y aparecen del mismo color que el texto — no el color de borde del tema. */
+  * {
+    @apply border-border;
+  }
+
+  /* Fondo y texto semánticos en el body.
+     transition-colors con duration-200 produce el efecto suave al
+     cambiar de paleta. El cambio de dark/light desactiva la transición
+     (disableTransitionOnChange en ThemeProvider) para evitar flash visual. */
+  body {
+    @apply bg-background text-foreground transition-colors duration-200;
+  }
+
+  /* Scrollbar personalizado para interfaces densas con tablas y listas largas.
+     Los scrollbars nativos del sistema rompen la estética en Windows (muy anchos).
+     Esta definición los adelgaza y los colorea con los tokens del sistema. */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground;
+  }
+}
