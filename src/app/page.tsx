@@ -11,24 +11,24 @@ import { getSession, saveSession } from "@/lib/session";
 const REQUISITOS = [
   {
     icon: Globe,
-    title: "Extensiones libres",
-    desc: "Elige entre .mx, .com.mx, .lat, .dev, .io y más. Tú decides cuál representa mejor al proyecto.",
+    title: "La extensión es tuya",
+    desc: ".mx, .com.mx, .lat, .dev, .io... lo que te guste. Tú decides qué queda mejor.",
     color: "text-blue-400",
     bgColor: "bg-blue-500/10",
     borderColor: "border-blue-400/20",
   },
   {
     icon: Type,
-    title: "Nombres cortos",
-    desc: "Representativos del proyecto Tenochtitlan. Fáciles de recordar y escribir.",
+    title: "Que se pueda grabar",
+    desc: "Nombres fáciles de decir y recordar. Nada de \"xqbn7z.mx\".",
     color: "text-emerald-400",
     bgColor: "bg-emerald-500/10",
     borderColor: "border-emerald-400/20",
   },
   {
     icon: Sparkles,
-    title: "Sé creativo",
-    desc: "Todas las propuestas son válidas. Juega con náhuatl, tech, siglas, lo que se te ocurra.",
+    title: "Ponte creativo",
+    desc: "Náhuatl, tech, siglas, lo que se te ocurra. No hay límites aquí.",
     color: "text-amber-400",
     bgColor: "bg-amber-500/10",
     borderColor: "border-amber-400/20",
@@ -36,10 +36,10 @@ const REQUISITOS = [
 ];
 
 const PASOS = [
-  { num: "1", titulo: "Identifícate", desc: "Ingresa alias y crea tu PIN de 4 dígitos", color: "from-blue-500 to-blue-600" },
-  { num: "2", titulo: "Sugiere 5+ dominios", desc: "Con su significado o interpretación", color: "from-emerald-500 to-emerald-600" },
-  { num: "3", titulo: "Vota por rondas", desc: "Reparte puntos entre tus favoritos", color: "from-indigo-500 to-indigo-600" },
-  { num: "4", titulo: "Resultado final", desc: "El dominio con más votos gana", color: "from-amber-500 to-amber-600" },
+  { num: "1", titulo: "Ponte tu alias", desc: "Un nombre y un PIN y listo", color: "from-blue-500 to-blue-600" },
+  { num: "2", titulo: "Suelta ideas", desc: "Mínimo 5 nombres con su onda", color: "from-emerald-500 to-emerald-600" },
+  { num: "3", titulo: "Reparte puntos", desc: "Dale más love a tus favoritos", color: "from-indigo-500 to-indigo-600" },
+  { num: "4", titulo: "El ganador", desc: "El más votado se lleva el nombre", color: "from-amber-500 to-amber-600" },
 ];
 
 const MIN_PARTICIPANTS = 8;
@@ -86,13 +86,13 @@ export default function Home() {
 
     const trimmed = username.trim().toLowerCase();
     if (!trimmed || trimmed.length < 2) {
-      setError("El usuario debe tener al menos 2 caracteres");
+      setError("El alias tiene que tener al menos 2 letras");
       setLoading(false);
       return;
     }
 
     if (!pin || pin.length < 4) {
-      setError("El PIN debe tener al menos 4 dígitos");
+      setError("El PIN necesita al menos 4 dígitos");
       setLoading(false);
       return;
     }
@@ -107,7 +107,7 @@ export default function Home() {
       const authData = await authRes.json();
 
       if (!authRes.ok) {
-        setError(authData.error || "Error al registrar");
+        setError(authData.error || "No se pudo registrar");
         setLoading(false);
         return;
       }
@@ -136,7 +136,7 @@ export default function Home() {
         router.push("/resultados");
       }
     } catch {
-      setError("Error de conexión. Verifica tu red e intenta de nuevo.");
+      setError("No hay conexión, checa tu red");
       setLoading(false);
     }
   }
@@ -168,15 +168,15 @@ export default function Home() {
         >
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-400">
-              Elige el dominio de
+              ¿Cómo le vamos a poner
             </span>
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
-              nuestro proyecto
+              al proyecto?
             </span>
           </h1>
           <p className="text-lg text-slate-400 max-w-xl mx-auto">
-            Sugiere, vota y decide — entre todos elegimos el nombre que nos representará.
+            Entre todos decidimos el nombre. Sugiere, vota y que gane el mejor.
           </p>
         </motion.div>
 
@@ -187,7 +187,7 @@ export default function Home() {
           className="mb-12"
         >
           <h2 className="text-center text-sm font-semibold text-slate-300 uppercase tracking-wider mb-6">
-            Cómo funciona
+            El proceso en 4 pasos
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {PASOS.map((paso, i) => (
@@ -217,7 +217,7 @@ export default function Home() {
         >
           <h2 className="text-center text-sm font-semibold text-slate-300 uppercase tracking-wider mb-6 flex items-center justify-center gap-2">
             <Shield className="w-4 h-4 text-blue-400" />
-            Requisitos
+            Tips para tu sugerencia
           </h2>
           <div className="grid sm:grid-cols-3 gap-4">
             {REQUISITOS.map((req, i) => (
@@ -253,24 +253,24 @@ export default function Home() {
                 <div className="flex-1">
                   <p className={`text-sm font-medium ${phaseInfo.participants >= MIN_PARTICIPANTS ? "text-emerald-300" : "text-blue-300"}`}>
                     {phaseInfo.participants >= MIN_PARTICIPANTS
-                      ? `${phaseInfo.participants} participantes listos — ¡las votaciones pueden comenzar!`
-                      : `${phaseInfo.participants} de ${MIN_PARTICIPANTS} participantes — faltan ${MIN_PARTICIPANTS - phaseInfo.participants}`
+                      ? `¡Ya somos ${phaseInfo.participants}! Se puede empezar a votar`
+                      : `Van ${phaseInfo.participants} de ${MIN_PARTICIPANTS} — faltan ${MIN_PARTICIPANTS - phaseInfo.participants} para arrancar`
                     }
                   </p>
-                  <p className="text-xs text-slate-400 mt-0.5">{phaseInfo.suggestions} sugerencias recibidas</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{phaseInfo.suggestions} ideas en la mesa</p>
                 </div>
               </div>
             )}
             {phaseInfo.phase === "voting" && (
               <div className="rounded-xl border bg-indigo-500/5 border-indigo-400/20 p-4 flex items-center gap-3">
                 <Vote className="w-5 h-5 text-indigo-400 shrink-0" />
-                <p className="text-sm font-medium text-indigo-300">Fase de votación activa — entra y reparte tus puntos</p>
+                <p className="text-sm font-medium text-indigo-300">Ya empezó la votación — entra a repartir puntos</p>
               </div>
             )}
             {phaseInfo.phase === "closed" && (
               <div className="rounded-xl border bg-amber-500/5 border-amber-400/20 p-4 flex items-center gap-3">
                 <Vote className="w-5 h-5 text-amber-400 shrink-0" />
-                <p className="text-sm font-medium text-amber-300">Votación cerrada — ve los resultados finales</p>
+                <p className="text-sm font-medium text-amber-300">Ya cerró la votación — a ver quién ganó</p>
               </div>
             )}
           </motion.div>
@@ -283,14 +283,14 @@ export default function Home() {
           className="max-w-md mx-auto"
         >
           <GlowCard hover={false} className="p-8">
-            <h2 className="text-xl font-semibold text-white mb-1">Regístrate</h2>
+            <h2 className="text-xl font-semibold text-white mb-1">Ponte tu alias</h2>
             <p className="text-sm text-slate-400 mb-6">
-              Elige un nombre de usuario y crea tu PIN para comenzar.
+              Nombre y PIN para entrar. Si ya tienes cuenta, te reconoce solito.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Usuario</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Tu alias</label>
                 <input
                   type="text"
                   value={username}
@@ -306,7 +306,7 @@ export default function Home() {
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   <span className="flex items-center gap-2">
                     <Hash className="w-4 h-4 text-blue-400" />
-                    PIN (nuevo)
+                    PIN (nuevo o el que ya tienes)
                   </span>
                 </label>
                 <input
@@ -328,7 +328,7 @@ export default function Home() {
                 {loading ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Entrando...</>
                 ) : (
-                  <><Play className="w-5 h-5" /> COMENZAR</>
+                  <><Play className="w-5 h-5" /> REGISTRO</>
                 )}
               </button>
             </form>
@@ -352,14 +352,14 @@ export default function Home() {
               }`}
             >
               <LogIn className="w-5 h-5" />
-              IR A VOTAR
+              Ya quiero votar
             </button>
 
             {!canGoToVoting && phaseInfo?.phase === "suggestions" && (
               <p className="text-xs text-slate-500 text-center mt-2">
                 {phaseInfo.participants < MIN_PARTICIPANTS
-                  ? `Se habilita con ${MIN_PARTICIPANTS} participantes (faltan ${MIN_PARTICIPANTS - phaseInfo.participants})`
-                  : "Esperando activación de votaciones"}
+                  ? `Se activa con ${MIN_PARTICIPANTS} personas (faltan ${MIN_PARTICIPANTS - phaseInfo.participants})`
+                  : "Esperando que el admin active la votación"}
               </p>
             )}
 

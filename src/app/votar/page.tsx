@@ -57,7 +57,7 @@ export default function VotarPage() {
 
       const { data: suggestions } = await supabase
         .from("suggestions").select("id, user_id, domain_name, meaning, initial_votes, created_at");
-      if (!suggestions || suggestions.length === 0) { setError("No hay sugerencias todavía"); setLoading(false); return; }
+      if (!suggestions || suggestions.length === 0) { setError("Aún no hay ideas en la mesa"); setLoading(false); return; }
 
       const { data: existingVotes } = await supabase
         .from("votes").select("suggestion_id, round_number").eq("user_id", u.id);
@@ -106,7 +106,7 @@ export default function VotarPage() {
   function handleSubmitClick() {
     const voteData = Object.entries(votes).filter(([, v]) => v.points > 0);
     if (voteData.length === 0) {
-      setError("Asigna al menos 1 punto");
+      setError("Tienes que dar al menos 1 punto");
       return;
     }
     setError("");
@@ -116,7 +116,7 @@ export default function VotarPage() {
 
   async function handleSubmitRound() {
     if (!pin || pin.length < 4) {
-      setError("El PIN debe tener al menos 4 dígitos");
+      setError("El PIN necesita al menos 4 dígitos");
       return;
     }
 
@@ -132,7 +132,7 @@ export default function VotarPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Error al votar");
+        setError(data.error || "No se pudieron guardar tus votos");
         setSubmitting(false);
         if (data.error?.includes("PIN")) {
           setPin("");
@@ -148,7 +148,7 @@ export default function VotarPage() {
       loadNextRound(allSuggestions, newVoted, roundNumber + 1);
       setSubmitting(false);
     } catch {
-      setError("Error de conexión");
+      setError("No hay conexión, checa tu red");
       setSubmitting(false);
     }
   }
@@ -168,12 +168,12 @@ export default function VotarPage() {
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative z-10">
           <GlowCard hover={false} className="max-w-md text-center p-10">
             <Trophy className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-2">Votación completada</h2>
-            <p className="text-slate-400 mb-6">Votaste en todas las opciones disponibles. Gracias {user?.username}!</p>
+            <h2 className="text-2xl font-bold text-white mb-2">Ya votaste</h2>
+            <p className="text-slate-400 mb-6">Le diste a todas las opciones, {user?.username}. ¡Buen trabajo!</p>
             <button onClick={() => router.push("/resultados")}
               className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
             >
-              Ver resultados <ChevronRight className="w-4 h-4" />
+              Ver quién ganó <ChevronRight className="w-4 h-4" />
             </button>
           </GlowCard>
         </motion.div>
@@ -194,7 +194,7 @@ export default function VotarPage() {
               </span>
             </div>
             <h1 className="text-2xl font-bold text-white">Reparte tus puntos</h1>
-            <p className="text-sm text-slate-400 mt-1">Máximo {MAX_PER_OPTION} puntos por opción. Toca + para asignar.</p>
+            <p className="text-sm text-slate-400 mt-1">Máximo {MAX_PER_OPTION} por opción. Dale al + para sumar.</p>
           </div>
           <div className="text-center">
             <motion.div key={pointsLeft} initial={{ scale: 1.3 }} animate={{ scale: 1 }}
@@ -202,7 +202,7 @@ export default function VotarPage() {
             >
               {pointsLeft}
             </motion.div>
-            <p className="text-xs text-slate-500">restantes</p>
+            <p className="text-xs text-slate-500">te quedan</p>
           </div>
         </div>
 
@@ -242,7 +242,7 @@ export default function VotarPage() {
                     {hasPoints && (
                       <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
                         <div className="mt-4 pt-4 border-t border-white/10">
-                          <p className="text-xs text-slate-500 mb-3">¿Por qué te gustó? (opcional)</p>
+                          <p className="text-xs text-slate-500 mb-3">¿Qué te gustó de esta?</p>
                           <div className="flex flex-wrap gap-2">
                             {(Object.entries(TAG_CONFIG) as [VoteTag["tag"], typeof TAG_CONFIG[VoteTag["tag"]]][]).map(([key, config]) => {
                               const isSelected = vote.tags.includes(key);
@@ -283,7 +283,7 @@ export default function VotarPage() {
             className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl transition-all text-lg flex items-center justify-center gap-2"
           >
             <Lock className="w-4 h-4" />
-            {submitting ? "Enviando..." : `Enviar votos · ${pointsUsed} puntos usados`}
+            {submitting ? "Mandando..." : `Mandar votos · ${pointsUsed} puntos usados`}
           </button>
         </div>
       </div>
@@ -309,8 +309,8 @@ export default function VotarPage() {
                   <div className="w-12 h-12 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center mx-auto mb-4">
                     <Hash className="w-6 h-6 text-blue-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-1">Confirmar PIN</h3>
-                  <p className="text-sm text-slate-400">Ingresa tu PIN para validar tu voto</p>
+                  <h3 className="text-lg font-semibold text-white mb-1">Pon tu PIN</h3>
+                  <p className="text-sm text-slate-400">Necesitamos confirmar que eres tú</p>
                 </div>
 
                 <input
@@ -349,7 +349,7 @@ export default function VotarPage() {
                     {submitting ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</>
                     ) : (
-                      <>Confirmar</>
+                      <>Confirma</>
                     )}
                   </button>
                 </div>

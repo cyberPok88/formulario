@@ -111,8 +111,8 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">Hola, {user?.username}</h1>
-          <p className="text-slate-400">Bienvenido al panel de control del proyecto.</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Qué onda, {user?.username}</h1>
+          <p className="text-slate-400">Resumen de las cosas.</p>
         </motion.div>
 
         {/* Estado actual */}
@@ -140,8 +140,7 @@ export default function DashboardPage() {
                 )}
               </div>
               <div>
-                <h3 className="text-white font-semibold">Estado del proyecto</h3>
-                <p className="text-sm text-slate-400">Fase actual</p>
+                <h3 className="text-white font-semibold">Cómo vamos</h3>
               </div>
             </div>
 
@@ -149,7 +148,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm text-slate-300">Participantes</span>
+                  <span className="text-sm text-slate-300">Gente en la ronda</span>
                 </div>
                 <span className="text-white font-semibold">{participants}</span>
               </div>
@@ -157,7 +156,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm text-slate-300">Opciones totales</span>
+                  <span className="text-sm text-slate-300">Ideas en la mesa</span>
                 </div>
                 <span className="text-white font-semibold">{suggestionsCount}</span>
               </div>
@@ -171,7 +170,7 @@ export default function DashboardPage() {
                     ? "bg-emerald-500/20 text-emerald-300"
                     : "bg-amber-500/20 text-amber-300"
                 }`}>
-                  {phaseInfo?.phase === "suggestions" ? "Sugerencias" : phaseInfo?.phase === "voting" ? "Votación" : "Cerrada"}
+                  {phaseInfo?.phase === "suggestions" ? "Juntando ideas" : phaseInfo?.phase === "voting" ? "Votando" : "Ya cerró"}
                 </span>
               </div>
             </div>
@@ -191,7 +190,7 @@ export default function DashboardPage() {
               className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold transition-all flex items-center justify-center gap-2 text-lg"
             >
               <Pencil className="w-5 h-5" />
-              Agregar mis sugerencias
+              Agrega tus ideas
             </button>
           )}
 
@@ -202,10 +201,10 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-sm text-amber-300 font-medium">
                     {missing > 0
-                      ? `Faltan ${missing} participantes para habilitar votación`
-                      : "Esperando activación de votaciones"}
+                      ? `Faltan ${missing} personas para arrancar la votación`
+                      : "Esperando que el admin le dé verde a la votación"}
                   </p>
-                  <p className="text-xs text-slate-400">Ya enviaste tus sugerencias. Sé paciente.</p>
+                  <p className="text-xs text-slate-400">Ya mandaste tus ideas.</p>
                 </div>
               </div>
             </div>
@@ -217,7 +216,7 @@ export default function DashboardPage() {
               className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold transition-all flex items-center justify-center gap-2 text-lg"
             >
               <Vote className="w-5 h-5" />
-              Ir a Votaciones
+              Ir a votar
             </button>
           )}
 
@@ -226,8 +225,8 @@ export default function DashboardPage() {
               <div className="flex items-center gap-3">
                 <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
                 <div>
-                  <p className="text-sm text-red-300 font-medium">No enviaste sugerencias</p>
-                  <p className="text-xs text-slate-400">La fase de sugerencias ya cerró. No puedes votar.</p>
+                <p className="text-sm text-red-300 font-medium">No mandaste ideas</p>
+                <p className="text-xs text-slate-400">La etapa de sugerencias ya cerró. Ya no puedes votar.</p>
                 </div>
               </div>
             </div>
@@ -238,7 +237,7 @@ export default function DashboardPage() {
             className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-slate-300 font-semibold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
           >
             <Eye className="w-5 h-5" />
-            Ver opciones de todos
+            Ver las otras ideas
           </button>
         </motion.div>
       </div>

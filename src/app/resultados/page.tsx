@@ -59,16 +59,16 @@ export default function ResultadosPage() {
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-2">
           <Trophy className="w-6 h-6 text-amber-400" />
-          <h1 className="text-3xl font-bold text-white">Resultados</h1>
+          <h1 className="text-3xl font-bold text-white">Los resultados</h1>
         </div>
-        <p className="text-slate-400 mb-8">{results.length} dominios sugeridos</p>
+        <p className="text-slate-400 mb-8">{results.length} ideas compitiendo</p>
 
         {stats && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
             {[
-              { label: "Sugerencias", value: stats.total_suggestions, icon: MessageSquare, color: "text-blue-400" },
-              { label: "Participantes", value: stats.total_participants, icon: Users, color: "text-indigo-400" },
-              { label: "Votantes", value: stats.total_voters, icon: Users, color: "text-emerald-400" },
+              { label: "Ideas", value: stats.total_suggestions, icon: MessageSquare, color: "text-blue-400" },
+              { label: "Gente", value: stats.total_participants, icon: Users, color: "text-indigo-400" },
+              { label: "Votaron", value: stats.total_voters, icon: Users, color: "text-emerald-400" },
               { label: "Votos", value: stats.total_votes, icon: BarChart3, color: "text-amber-400" },
             ].map((stat) => (
               <div key={stat.label} className="rounded-xl bg-white/5 border border-white/10 p-4 text-center">
@@ -126,7 +126,7 @@ export default function ResultadosPage() {
           ))}
 
           {results.length === 0 && (
-            <div className="text-center text-slate-400 py-12">No hay resultados todavía</div>
+            <div className="text-center text-slate-400 py-12">Aún no hay resultados, espérate</div>
           )}
         </div>
       </div>

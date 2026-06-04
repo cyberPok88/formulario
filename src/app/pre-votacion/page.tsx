@@ -100,7 +100,7 @@ export default function PreVotacionPage() {
         <button onClick={() => router.back()}
           className="flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-6 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Volver
+          <ArrowLeft className="w-4 h-4" /> Regresar
         </button>
 
         {/* Header */}
@@ -112,8 +112,8 @@ export default function PreVotacionPage() {
           <div className="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-400/30 flex items-center justify-center mx-auto mb-4">
             <Clock className="w-8 h-8 text-amber-400" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Próximamente las votaciones</h1>
-          <p className="text-slate-400">Estamos reuniendo las opciones de todos los participantes.</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Ya casi empieza la votación</h1>
+          <p className="text-slate-400">Estamos juntando las ideas de todos. Ten paciencia.</p>
         </motion.div>
 
         {/* Stats */}
@@ -126,16 +126,16 @@ export default function PreVotacionPage() {
           <GlowCard hover={false} className="text-center">
             <Users className="w-6 h-6 text-blue-400 mx-auto mb-2" />
             <p className="text-3xl font-bold text-white">{participants}</p>
-            <p className="text-sm text-slate-400">participantes</p>
-            {missing > 0 && (
-              <p className="text-xs text-amber-400 mt-1">Faltan {missing} para habilitar votación</p>
-            )}
+              <p className="text-sm text-slate-400">personas en la ronda</p>
+              {missing > 0 && (
+                <p className="text-xs text-amber-400 mt-1">Faltan {missing} para arrancar</p>
+              )}
           </GlowCard>
 
           <GlowCard hover={false} className="text-center">
             <FileText className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
             <p className="text-3xl font-bold text-white">{suggestionsCount}</p>
-            <p className="text-sm text-slate-400">opciones propuestas</p>
+            <p className="text-sm text-slate-400">ideas propuestas</p>
           </GlowCard>
         </motion.div>
 
@@ -147,7 +147,7 @@ export default function PreVotacionPage() {
           className="mb-8"
         >
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-slate-400">Progreso de participantes</span>
+            <span className="text-slate-400">¿Cuántos somos?</span>
             <span className="text-white font-medium">{participants}/{MIN_PARTICIPANTS}</span>
           </div>
           <div className="h-3 bg-white/5 rounded-full overflow-hidden">
@@ -176,7 +176,7 @@ export default function PreVotacionPage() {
             className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
           >
             {showAll ? <ListChecks className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-            {showAll ? "Ocultar opciones" : `Ver las ${suggestionsCount} opciones`}
+            {showAll ? "Esconder opciones" : `Ver las ${suggestionsCount} ideas`}
           </button>
         </motion.div>
 
@@ -204,7 +204,7 @@ export default function PreVotacionPage() {
                       {(s.initial_votes ?? 1) > 1 && (
                         <div className="flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-400/20 w-fit">
                           <UsersRound className="w-3 h-3 text-emerald-400" />
-                          <span className="text-xs text-emerald-300">{s.initial_votes} personas</span>
+                          <span className="text-xs text-emerald-300">{s.initial_votes} personas con la misma idea</span>
                         </div>
                       )}
                     </div>
@@ -223,11 +223,11 @@ export default function PreVotacionPage() {
           className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-6 text-center"
         >
           <Vote className="w-8 h-8 text-blue-400 mx-auto mb-3" />
-          <h3 className="text-white font-semibold mb-2">¿Listo para votar?</h3>
+          <h3 className="text-white font-semibold mb-2">¿Ya quieres votar?</h3>
           <p className="text-sm text-slate-400">
-            Las votaciones se habilitarán automáticamente cuando hayan al menos {MIN_PARTICIPANTS} participantes.
+            Las votaciones se activan solas cuando hayan al menos {MIN_PARTICIPANTS} personas.
             <br />
-            <span className="text-amber-400">Sé paciente mientras juntamos las opciones de todos.</span>
+            <span className="text-amber-400">Tranquilo, ya va a llegar el momento.</span>
           </p>
         </motion.div>
       </div>

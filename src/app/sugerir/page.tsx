@@ -147,7 +147,7 @@ export default function SugerirPage() {
   function handleReview() {
     const incomplete = suggestions.findIndex(s => !s.domain_name.trim() || !s.meaning.trim());
     if (incomplete !== -1) {
-      setError(`La sugerencia ${incomplete + 1} está incompleta`);
+      setError(`La idea ${incomplete + 1} está incompleta`);
       return;
     }
 
@@ -173,14 +173,14 @@ export default function SugerirPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "Error al enviar"); setLoading(false); return; }
+      if (!res.ok) {       setError(data.error || "No se pudieron guardar"); setLoading(false); return; }
 
       const statsRes = await fetch("/api/suggestions");
       const statsData = await statsRes.json();
       setStats(statsData.stats);
       setPhase("done");
     } catch {
-      setError("Error de conexión");
+      setError("No hay conexión");
       setLoading(false);
     }
   }
@@ -196,17 +196,17 @@ export default function SugerirPage() {
             <div className="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-400/30 flex items-center justify-center mx-auto mb-6">
               <Clock className="w-8 h-8 text-amber-400" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-3">Sugerencias cerradas</h1>
+            <h1 className="text-2xl font-bold text-white mb-3">Se acabó el tiempo</h1>
             <p className="text-slate-400 mb-8">
-              Ya hay {phaseInfo?.participants} participantes registrados. La fase de sugerencias está cerrada.
+              Ya hay {phaseInfo?.participants} personas registradas. La etapa de sugerencias ya cerró.
               <br />
-              Las votaciones se habilitarán pronto.
+              Pronto arrancan las votaciones.
             </p>
             <button
               onClick={() => router.push("/pre-votacion")}
               className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition-all"
             >
-              Ver opciones propuestas
+              Ver qué hay en la mesa
             </button>
           </motion.div>
         </div>
@@ -229,8 +229,8 @@ export default function SugerirPage() {
               >
                 <Check className="w-8 h-8 text-emerald-400" />
               </motion.div>
-              <h1 className="text-2xl font-bold text-white mb-2">¡Propuestas enviadas!</h1>
-              <p className="text-slate-400">Gracias {user.username}, tu participación fue registrada.</p>
+              <h1 className="text-2xl font-bold text-white mb-2">¡Listo, ya quedó!</h1>
+              <p className="text-slate-400">Gracias {user.username}, ya registramos tus ideas.</p>
             </div>
 
             {/* Stats del usuario */}
@@ -241,17 +241,17 @@ export default function SugerirPage() {
                 </div>
                 <div>
                   <h3 className="text-white font-semibold">Tu resumen</h3>
-                  <p className="text-sm text-slate-400">Propuestas registradas</p>
+                  <p className="text-sm text-slate-400">Tus ideas registradas</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-white/5 border border-white/10 p-4 text-center">
                   <p className="text-3xl font-bold text-blue-400">{suggestions.length}</p>
-                  <p className="text-xs text-slate-500 mt-1">tus sugerencias</p>
+                  <p className="text-xs text-slate-500 mt-1">tus ideas</p>
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-4 text-center">
                   <p className="text-3xl font-bold text-indigo-400">{stats?.total_suggestions ?? 0}</p>
-                  <p className="text-xs text-slate-500 mt-1">total en la bdd</p>
+                  <p className="text-xs text-slate-500 mt-1">total de ideas</p>
                 </div>
               </div>
             </GlowCard>
@@ -263,8 +263,8 @@ export default function SugerirPage() {
                   <Clock className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold">Estado actual</h3>
-                  <p className="text-sm text-slate-400">Fase del proyecto</p>
+                  <h3 className="text-white font-semibold">¿Qué sigue?</h3>
+                  <p className="text-sm text-slate-400">Estado del cotorreo</p>
                 </div>
               </div>
 
@@ -280,7 +280,7 @@ export default function SugerirPage() {
                 <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
                   <div className="flex items-center gap-2">
                     <Globe className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-300">Fase actual</span>
+                    <span className="text-sm text-slate-300">¿En qué etapa vamos?</span>
                   </div>
                   <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                     phaseInfo?.phase === "suggestions"
@@ -289,7 +289,7 @@ export default function SugerirPage() {
                       ? "bg-emerald-500/20 text-emerald-300"
                       : "bg-amber-500/20 text-amber-300"
                   }`}>
-                    {phaseInfo?.phase === "suggestions" ? "Sugerencias" : phaseInfo?.phase === "voting" ? "Votación" : "Cerrada"}
+                    {phaseInfo?.phase === "suggestions" ? "Juntando ideas" : phaseInfo?.phase === "voting" ? "Votando" : "Ya cerró"}
                   </span>
                 </div>
               </div>
@@ -301,9 +301,9 @@ export default function SugerirPage() {
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-blue-400 shrink-0" />
                   <div className="flex-1">
-                    <p className="text-sm text-blue-300 font-medium">Las votaciones comenzarán pronto</p>
+                    <p className="text-sm text-blue-300 font-medium">Las votaciones están por empezar</p>
                     <p className="text-xs text-slate-400">
-                      Se habilitarán cuando haya al menos {MIN_PARTICIPANTS} participantes y el admin active la fase.
+                      Se activan cuando haya al menos {MIN_PARTICIPANTS} personas y el admin le dé verde.
                     </p>
                   </div>
                 </div>
@@ -317,7 +317,7 @@ export default function SugerirPage() {
                   className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold transition-all flex items-center justify-center gap-2 text-lg"
                 >
                   <Vote className="w-5 h-5" />
-                  Ir a Votaciones
+                  Ir a votar
                 </button>
               )}
 
@@ -326,7 +326,7 @@ export default function SugerirPage() {
                 className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
               >
                 <Eye className="w-5 h-5" />
-                Ver listado de opciones
+                Ver las ideas de todos
               </button>
             </div>
 
@@ -349,18 +349,18 @@ export default function SugerirPage() {
           <button onClick={() => setPhase("capture")}
             className="flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-6 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" /> Volver a editar
+            <ArrowLeft className="w-4 h-4" /> Seguir editando
           </button>
 
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-white mb-1">Tus propuestas</h1>
-              <p className="text-slate-400 text-sm">Revisa antes de enviar. Puedes editar o agregar más.</p>
+              <h1 className="text-2xl font-bold text-white mb-1">Revisa tus ideas</h1>
+              <p className="text-slate-400 text-sm">Dale una checada antes de mandar. Puedes editar o agregar más.</p>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-400/20">
               <Hash className="w-4 h-4 text-blue-400" />
               <span className="text-blue-300 font-semibold">{suggestions.length}</span>
-              <span className="text-slate-400 text-sm">total</span>
+              <span className="text-slate-400 text-sm">en total</span>
             </div>
           </div>
 
@@ -393,7 +393,7 @@ export default function SugerirPage() {
                       />
                       <button onClick={() => setEditingIndex(null)}
                         className="text-xs text-blue-400 hover:text-blue-300"
-                      >Listo</button>
+                      >OK</button>
                     </div>
                   ) : (
                     <>
@@ -427,7 +427,7 @@ export default function SugerirPage() {
 
                           {fullDomain && (
                             <div className="mt-3 pt-3 border-t border-white/5">
-                              <p className="text-[10px] uppercase tracking-widest text-slate-600 mb-2">Así se vería</p>
+                              <p className="text-[10px] uppercase tracking-widest text-slate-600 mb-2">Cómo se vería</p>
                               <div className="flex flex-wrap gap-2">
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-xs font-mono text-slate-400">
                                   <ExternalLink className="w-3 h-3 text-blue-500/60" />
@@ -461,7 +461,7 @@ export default function SugerirPage() {
           <button onClick={addSuggestion}
             className="w-full mt-4 py-3 rounded-xl border border-dashed border-white/20 text-slate-400 hover:text-white hover:border-white/40 transition-colors flex items-center justify-center gap-2 text-sm"
           >
-            <Plus className="w-4 h-4" /> Agregar otra sugerencia
+          <Plus className="w-4 h-4" /> Otra idea más
           </button>
 
           {error && <p className="text-red-400 text-sm text-center mt-4">{error}</p>}
@@ -482,10 +482,10 @@ export default function SugerirPage() {
       <div className="relative z-10 max-w-2xl mx-auto py-8">
         <div className="flex items-center gap-3 mb-2">
           <Globe className="w-6 h-6 text-blue-400" />
-          <h1 className="text-2xl font-bold text-white">Sugiere dominios</h1>
+          <h1 className="text-2xl font-bold text-white">Suelta tus ideas</h1>
         </div>
         <p className="text-slate-400 text-sm mb-6">
-          Propón al menos 5 nombres con su significado. Elige la extensión que prefieras.
+          Mínimo 5 nombres con su significado. La extensión la tú escoges.
         </p>
 
         <ProgressBar value={completedCount} max={5} className="mb-8" color={allComplete ? "green" : "blue"} />
@@ -505,7 +505,7 @@ export default function SugerirPage() {
                     }`}>
                       {isComplete ? <Check className="w-3.5 h-3.5" /> : i + 1}
                     </div>
-                    <span className="text-sm text-slate-400">Sugerencia {i + 1}{i >= 5 ? " (extra)" : ""}</span>
+                    <span className="text-sm text-slate-400">Idea {i + 1}{i >= 5 ? " (extra)" : ""}</span>
                     {i >= 5 && (
                       <button onClick={() => removeSuggestion(i)} className="ml-auto p-1 rounded hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition-colors">
                         <Trash2 className="w-4 h-4" />
@@ -516,7 +516,7 @@ export default function SugerirPage() {
                     <div className="flex gap-2">
                       <div className="relative flex-1">
                         <input type="text" value={s.domain_name} onChange={e => updateSuggestion(i, "domain_name", e.target.value)}
-                          placeholder="nombre-del-dominio"
+                          placeholder="nombre-chido"
                           className="w-full px-4 py-2.5 pr-10 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/50 text-sm font-mono"
                         />
                         {isChecking && (
@@ -535,7 +535,7 @@ export default function SugerirPage() {
                     </div>
 
                     <textarea value={s.meaning} onChange={e => updateSuggestion(i, "meaning", e.target.value)}
-                      placeholder="¿Qué significa o por qué lo elegiste?"
+                      placeholder="¿Por qué este nombre?"
                       rows={2}
                       className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/50 text-sm resize-none"
                     />
@@ -560,7 +560,7 @@ export default function SugerirPage() {
               onClick={handleReview}
               className="w-full mt-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-lg"
             >
-              Revisar mis sugerencias <ArrowRight className="w-5 h-5" />
+              Revisar mis ideas <ArrowRight className="w-5 h-5" />
             </motion.button>
           )}
         </AnimatePresence>

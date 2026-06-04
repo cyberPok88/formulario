@@ -3,60 +3,70 @@
 # Estado del Proyecto — Votación de Dominios
 
 ## Qué es este proyecto
-App de votación de dominios `.mx` para colegas de TI del proyecto Tenochtitlan. Dos fases secuenciales:
-1. **Sugerencias** — cada usuario propone 5+ nombres de dominio con significado (extensión .mx ya pactada)
-2. **Votación** — reparten 5 puntos (max 3 por opción) entre grupos de 5 dominios anónimos y aleatorios, por rondas
+App de votación de dominios para colegas de TI del proyecto Tenochtitlan. Tres fases:
+1. **Sugerencias** — cada usuario propone 5+ nombres de dominio con significado (extensiones flexibles)
+2. **Votación** — reparten 5 puntos (max 3 por opción) entre grupos de 5 dominios aleatorios, por rondas
+3. **Cerrada** — solo resultados
 
 ## Stack
 - Next.js 16.2.3 (App Router), React 19, TypeScript
-- Tailwind CSS 3 con sistema semántico dark (Guía 0.1 aplicada completa — Partes 2, 3, 4)
-- Supabase JS (sin auth — solo usernames únicos en localStorage)
-- Framer Motion, tailwindcss-animate, Lucide React
-- Dark mode forzado (sin ThemeProvider, `class="dark"` directo en html)
-- Deploy: Vercel (gratis, temporal)
+- Tailwind CSS 3.4.19 con sistema semántico dark
+- Supabase JS (sin auth — usernames + PIN en localStorage)
+- Framer Motion, Lucide React
+- Dark mode forzado (`class="dark"` en html)
 
 ## Estado de implementación
 
 ### ✅ Completado
-- **Rediseño visual completo** (junio 2026):
-  - Landing: hero con gradient text, 3 context cards (.mx, nombres cortos, creatividad), glassmorphism login, banner de estado de fase
-  - Sugerencias: flujo 2 fases (captura → revisión con previews de email/URL/handle → confirmación con stats)
-  - Votación: GlowCards, DomainBadge `.mx`, sticky footer, animated counters
-  - Resultados: podio top 3, stats bar (sugerencias/participantes/votantes/votos), ranking con gradient progress bars
-- **Componentes UI compartidos**: GlowCard, DomainBadge, ProgressBar, Podium (`src/components/ui/`)
-- **APIs con stats**: GET `/api/suggestions` y `/api/results` retornan stats agregados
-- **Sugerencias flexibles**: mínimo 5, sin máximo (POST acepta >= 5)
-- Guía 0.1 completa: Partes 2 (tailwind tokens), 3 (globals.css + eslint + layout), 4 (theme-provider, error-boundary, button/input/label)
-- Todas las API routes: `/api/config`, `/api/suggestions`, `/api/votes`, `/api/results`
-- Supabase client + tipos compartidos (`src/lib/supabase.ts`, `src/lib/types.ts`)
-- Build compilando sin errores ✅
+- **Sistema de auth con PIN**: registro/login unificado via `/api/auth`, SHA-256 hashing, sesión localStorage 12h
+- **Sesión con expiración**: `src/lib/session.ts` — save/get/clear/isValid
+- **Landing page**: hero, COMENZAR + IR A VOTAR (deshabilitado si <8 participantes)
+- **Sugerencias**: formulario con extensiones flexibles (9 opciones), duplicate checking silencioso, revisión antes de enviar
+- **Dashboard post-login**: estado del proyecto, stats, acciones contextuales según fase
+- **Pre-votación**: participantes, progreso, listado de opciones, botón volver
+- **Votación**: rondas aleatorias, PIN modal para confirmar, tags opcionales con colores/emojis
+- **Resultados**: podium top 3, ranking con votos iniciales incluidos
+- **Lógica de duplicados**: si alguien sugiere dominio existente, se merge silenciosamente incrementando `initial_votes`
+- **Bloqueo de sugerencias**: cuando 8+ participantes, se cierra la fase de sugerencias
+- **Navbar**: usuario + logout en pre-votacion y dashboard
+- **Componentes UI**: GlowCard, DomainBadge (multi-extensión), ProgressBar, Podium
+- **Build limpio** ✅
 
 ### ⏳ Pendiente
-- **Sistema de rondas eliminatorias** — 2-3 rondas donde las menos votadas se eliminan, hasta quedar 2 finalistas
-- **Transición automática** — cuando 5+ usuarios envíen sugerencias, habilitar votación (actualmente se cambia `app_config.phase` en Supabase manualmente)
-- **Deploy a Vercel** — cuando esté listo para la dinámica
-
-## Archivos clave
-- Plan original: `docs/superpowers/plans/2026-06-03-domain-voting-app.md`
-- Spec rediseño: `docs/superpowers/specs/2026-06-03-voting-redesign.md`
-- Plan rediseño: `docs/superpowers/plans/2026-06-03-voting-redesign.md`
+- **Transición automática de fase** — actualmente se cambia `app_config.phase` en Supabase manualmente
+- **Deploy a Vercel** — cuando esté listo
 
 ## Reglas del negocio
-- Extensión `.mx` ya pactada — todos los dominios son `.mx`
-- Nombres cortos y representativos del proyecto Tenochtitlan
-- Creatividad libre — todas las propuestas son válidas
+- Extensiones flexibles: `.mx`, `.com.mx`, `.org.mx`, `.net.mx`, `.lat`, `.com`, `.org`, `.dev`, `.io`
 - 5+ sugerencias por usuario (mínimo 5, sin máximo)
 - 5 puntos por ronda, max 3 por opción
-- Tags opcionales al votar: "Suena chido", "Sencillo", "Practico"
-- Fase controlada por `app_config.phase` en Supabase: `suggestions` → `voting` → `closed`
-- Opciones en votación: anónimas y aleatorias
-- Sin auth — username único guardado en localStorage
-- Threshold de 5 participantes para habilitar votación (mostrado en landing)
+- Tags opcionales: "Suena chido" 🔥, "Sencillo" ✨, "Práctico" ⚡
+- Mínimo 8 participantes para habilitar votación
+- Duplicados permitidos: merge silencioso, votos iniciales suman al total
+- Sin auth tradicional — username único + PIN en localStorage
+- Sesión expira en 12 horas
+- Fase controlada por `app_config.phase`: `suggestions` → `voting` → `closed`
 
-## Componentes UI custom
+## Archivos clave
+- `src/lib/session.ts` — gestión de sesión con expiración
+- `src/lib/types.ts` — tipos + TAG_CONFIG con colores/emojis
+- `src/lib/supabase.ts` — cliente Supabase singleton
+- `src/app/api/auth/route.ts` — API PIN (register/login/verify)
+- `src/app/api/suggestions/route.ts` — GET lista + POST merge duplicados
+- `src/app/api/check-domain/route.ts` — duplicate check silencioso
+- `src/app/api/votes/route.ts` — votación con verificación PIN
+- `src/app/api/results/route.ts` — resultados con initial_votes
+
+## SQL de setup
+```sql
+ALTER TABLE users ADD COLUMN pin_hash TEXT;
+ALTER TABLE suggestions ADD COLUMN initial_votes INTEGER DEFAULT 1;
+```
+
+## Componentes UI
 | Componente | Archivo | Uso |
 |:-----------|:--------|:----|
 | GlowCard | `src/components/ui/glow-card.tsx` | Card glassmorphism con hover glow |
-| DomainBadge | `src/components/ui/domain-badge.tsx` | Muestra `nombre.mx` como badge |
+| DomainBadge | `src/components/ui/domain-badge.tsx` | Badge de dominio con extensiones dinámicas |
 | ProgressBar | `src/components/ui/progress-bar.tsx` | Barra animada con gradiente |
 | Podium | `src/components/ui/podium.tsx` | Top 3 con medallas para resultados |
